@@ -75,13 +75,19 @@ public class XPathParser extends BaseParser<Object> {
         }
     }
 
+    /** Whitespace handling **/
+
+    Rule WS() {
+        return Optional(Xml_S());
+    };
+
     /** RULES BELOW **/
 
     /**
      * [2] Expr ::= ExprSingle ("," ExprSingle)*
      */
     Rule Expr() {
-        return Sequence(ExprSingle(), ZeroOrMore(Sequence(',', ExprSingle())));
+        return Sequence(ExprSingle(), ZeroOrMore(Sequence(',', WS(), ExprSingle())));
     }
 
     /**
@@ -98,14 +104,14 @@ public class XPathParser extends BaseParser<Object> {
      * [8] OrExpr ::= AndExpr ( "or" AndExpr )*
      */
     Rule OrExpr() {
-        return Sequence(AndExpr(), ZeroOrMore(Sequence("or", AndExpr())));
+        return Sequence(AndExpr(), ZeroOrMore(Sequence("or", WS(), AndExpr())));
     }
 
     /**
      * [9] AndExpr ::= ComparisonExpr ( "and" ComparisonExpr )*
      */
     Rule AndExpr() {
-        return Sequence(ComparisonExpr(), ZeroOrMore(Sequence("and", ComparisonExpr())));
+        return Sequence(ComparisonExpr(), ZeroOrMore(Sequence("and", WS(), ComparisonExpr())));
     }
 
     /**
@@ -127,42 +133,42 @@ public class XPathParser extends BaseParser<Object> {
      * [11] RangeExpr ::= AdditiveExpr ( "to" AdditiveExpr )?
      */
     Rule RangeExpr() {
-        return Sequence(AdditiveExpr(), Optional(Sequence("to", AdditiveExpr())));
+        return Sequence(AdditiveExpr(), Optional(Sequence("to", WS(), AdditiveExpr())));
     }
 
     /**
      * [12] AdditiveExpr ::= MultiplicativeExpr ( ("+" | "-") MultiplicativeExpr )*
      */
     Rule AdditiveExpr() {
-        return Sequence(MultiplicativeExpr(), ZeroOrMore(Sequence(FirstOf('+', '-'), MultiplicativeExpr())));
+        return Sequence(MultiplicativeExpr(), ZeroOrMore(Sequence(FirstOf('+', '-'), WS(), MultiplicativeExpr())));
     }
 
     /**
      * [13] MultiplicativeExpr ::= UnionExpr ( ("*" | "div" | "idiv" | "mod") UnionExpr )*
      */
     Rule MultiplicativeExpr() {
-        return Sequence(UnionExpr(), ZeroOrMore(Sequence(FirstOf('*', "idiv", "div", "mod"), UnionExpr())));
+        return Sequence(UnionExpr(), ZeroOrMore(Sequence(FirstOf('*', "idiv", "div", "mod"), WS(), UnionExpr())));
     }
 
     /**
      * [14] UnionExpr ::= IntersectExceptExpr ( ("union" | "|") IntersectExceptExpr )*
      */
     Rule UnionExpr() {
-        return Sequence(IntersectExceptExpr(), ZeroOrMore(Sequence(FirstOf("union", '|'), IntersectExceptExpr())));
+        return Sequence(IntersectExceptExpr(), ZeroOrMore(Sequence(FirstOf("union", '|'), WS(), IntersectExceptExpr())));
     }
 
     /**
      * [15] IntersectExceptExpr ::= InstanceofExpr ( ("intersect" | "except") InstanceofExpr )*
      */
     Rule IntersectExceptExpr() {
-        return Sequence(InstanceofExpr(), ZeroOrMore(Sequence(FirstOf("intersect", "except"), InstanceofExpr())));
+        return Sequence(InstanceofExpr(), ZeroOrMore(Sequence(FirstOf("intersect", "except"), WS(), InstanceofExpr())));
     }
 
     /**
      * [16] InstanceofExpr ::= TreatExpr ( "instance" "of" SequenceType )?
      */
     Rule InstanceofExpr() {
-        return Sequence(TreatExpr(), Optional(Sequence("instance", "of", SequenceType())));
+        return Sequence(TreatExpr(), Optional(Sequence("instance", WS(), "of", WS(), SequenceType())));
 
     }
 
@@ -170,21 +176,21 @@ public class XPathParser extends BaseParser<Object> {
      * [17] TreatExpr ::= CastableExpr ( "treat" "as" SequenceType )?
      */
     Rule TreatExpr() {
-        return Sequence(CastableExpr(), Optional(Sequence("treat", "as", SequenceType())));
+        return Sequence(CastableExpr(), Optional(Sequence("treat", WS(), "as", WS(), SequenceType())));
     }
 
     /**
      * [18] CastableExpr ::= CastExpr ( "castable" "as" SingleType )?
      */
     Rule CastableExpr() {
-        return Sequence(CastExpr(), Optional(Sequence("castable", "as", SingleType())));
+        return Sequence(CastExpr(), Optional(Sequence("castable", WS(), "as", WS(), SingleType())));
     }
 
     /**
      * [19] CastExpr ::= UnaryExpr ( "cast" "as" SingleType )?
      */
     Rule CastExpr() {
-        return Sequence(UnaryExpr(), Optional(Sequence("cast", "as", SingleType())));
+        return Sequence(UnaryExpr(), Optional(Sequence("cast", WS(), "as", WS(), SingleType())));
 
     }
 
@@ -192,7 +198,7 @@ public class XPathParser extends BaseParser<Object> {
      * [20] UnaryExpr ::= ("-" | "+")* ValueExpr
      */
     Rule UnaryExpr() {
-        return Sequence(ZeroOrMore('-', '+'), ValueExpr());
+        return Sequence(ZeroOrMore('-', '+'), WS(), ValueExpr());
     }
 
     /**
@@ -209,21 +215,21 @@ public class XPathParser extends BaseParser<Object> {
      * [22] GeneralComp ::= "=" | "!=" | "<" | "<=" | ">" | ">="
      */
     Rule GeneralComp() {
-        return FirstOf("<=", "!=", ">=", '<', '=', '>');
+        return Sequence(FirstOf("<=", "!=", ">=", '<', '=', '>'), WS());
     }
 
     /**
      * [23] ValueComp ::= "eq" | "ne" | "lt" | "le" | "gt" | "ge"
      */
     Rule ValueComp() {
-        return FirstOf("eq", "ne", "lt", "le", "gt", "ge");
+        return Sequence(FirstOf("eq", "ne", "lt", "le", "gt", "ge"), WS());
     }
 
     /**
      * [24] NodeComp ::= "is" | "<<" | ">>"
      */
     Rule NodeComp() {
-        return FirstOf("is", "<<", ">>");
+        return Sequence(FirstOf("is", "<<", ">>"), WS());
     }
 
     /**
@@ -233,7 +239,7 @@ public class XPathParser extends BaseParser<Object> {
      */
     Rule PathExpr() {
         return FirstOf(
-                Sequence("//", RelativePathExpr(), new Action() {
+                Sequence("//", WS(), RelativePathExpr(), new Action() {
                     @Override
                     public boolean run(final Context context) {
                         final Path path = (Path) pop();
@@ -245,7 +251,7 @@ public class XPathParser extends BaseParser<Object> {
                         return push(path);
                     }
                 }),
-                Sequence('/', Optional(RelativePathExpr())),
+                Sequence('/', WS(), Optional(RelativePathExpr())),
                 RelativePathExpr()
         );
     }
@@ -269,7 +275,7 @@ public class XPathParser extends BaseParser<Object> {
                 },
                 ZeroOrMore(
                         Sequence(
-                                FirstOf("//", '/'), push("!" + match()),
+                                FirstOf("//", '/'), push("!" + match()), WS(),
                                 StepExpr(), new Action() {
                                     @Override
                                     public boolean run(Context context) {
@@ -343,8 +349,8 @@ public class XPathParser extends BaseParser<Object> {
                 "descendant",
                 "following-sibling",
                 "following",
-                "namespace"), push(Step.fromSyntax(match())),
-                "::");
+                "namespace"), push(Step.fromSyntax(match())), WS(),
+                "::", WS());
     }
 
     /**
@@ -352,7 +358,7 @@ public class XPathParser extends BaseParser<Object> {
      */
     Rule AbbrevForwardStep() {
         return Sequence(
-                Optional('@'), push("!@" + matchLength()),
+                Optional(Sequence('@', WS())), push("!@" + match().trim().length()),
                 NodeTest(), new Action() {
                     @Override
                     public boolean run(final Context context) {
@@ -401,15 +407,15 @@ public class XPathParser extends BaseParser<Object> {
                 "preceding",
                 "parent",
                 "ancestor-or-self",
-                "ancestor"), push(Step.fromSyntax(match())),
-                "::");
+                "ancestor"), push(Step.fromSyntax(match())), WS(),
+                "::", WS());
     }
 
     /**
      * [34] AbbrevReverseStep ::= ".."
      */
     Rule AbbrevReverseStep() {
-        return Sequence("..", push(new AxisStep(Step.PARENT)));
+        return Sequence("..", push(new AxisStep(Step.PARENT)), WS());
     }
 
     /**
@@ -429,7 +435,7 @@ public class XPathParser extends BaseParser<Object> {
     /**
      * [37] Wildcard ::=    "*"
      *                      | (NCName ":" "*")
-     *                      | ("*" ":" NCName)
+     *                      | ("*" ":" NCName)      //ws: explicit
      */
     Rule Wildcard() {
         return FirstOf(
@@ -458,14 +464,14 @@ public class XPathParser extends BaseParser<Object> {
      */
     Rule Predicate() {
         return Sequence(
-                '[',
+                '[', WS(),
                 Expr(), new Action() {
                     @Override
                     public boolean run(Context context) {
                         return true;
                     }
                 },
-                ']'
+                ']', WS()
         );
     }
 
@@ -499,9 +505,9 @@ public class XPathParser extends BaseParser<Object> {
      */
     Rule ParenthesizedExpr() {
         return Sequence(
-                '(',
+                '(', WS(),
                 Optional(Expr()),
-                ')'
+                ')', WS()
         );
     }
 
@@ -509,14 +515,14 @@ public class XPathParser extends BaseParser<Object> {
      * [47] ContextItemExpr ::= "."
      */
     Rule ContextItemExpr() {
-        return fromCharLiteral('.');
+        return Sequence('.', WS());
     }
 
     /**
      * [49] SingleType ::= AtomicType "?"?
      */
     Rule SingleType() {
-        return Sequence(AtomicType(), Optional('?'));
+        return Sequence(AtomicType(), Optional(Sequence('?', WS())));
     }
 
     /**
@@ -524,21 +530,21 @@ public class XPathParser extends BaseParser<Object> {
      *                          | (ItemType OccurrenceIndicator?)
      */
     Rule SequenceType() {
-        return FirstOf(Sequence("empty-sequence", '(', ')'), Sequence(ItemType(), Optional(OccurrenceIndicator())));
+        return FirstOf(Sequence("empty-sequence", WS(), '(', WS(), ')', WS()), Sequence(ItemType(), Optional(OccurrenceIndicator())));
     }
 
     /**
      * [51] OccurrenceIndicator ::= "?" | "*" | "+"
      */
     Rule OccurrenceIndicator() {
-        return FirstOf('?', '*', '+');
+        return Sequence(FirstOf('?', '*', '+'), WS());
     }
 
     /**
      * [52] ItemType ::= KindTest | ("item" "(" ")") | AtomicType
      */
     Rule ItemType() {
-        return FirstOf(KindTest(), Sequence("item", '(', ')'), AtomicType());
+        return FirstOf(KindTest(), Sequence("item", WS(), '(', WS(), ')', WS()), AtomicType());
     }
 
     /**
@@ -577,56 +583,56 @@ public class XPathParser extends BaseParser<Object> {
      * [55] AnyKindTest ::= "node" "(" ")"
      */
     Rule AnyKindTest() {
-        return Sequence("node", '(', ')');
+        return Sequence("node", WS(), '(', WS(), ')', WS());
     }
 
     /**
      * [56] DocumentTest ::= "document-node" "(" (ElementTest | SchemaElementTest)? ")"
      */
     Rule DocumentTest() {
-        return Sequence("document-node", '(', Optional(FirstOf(ElementTest(), SchemaElementTest())), ')');
+        return Sequence("document-node", WS(), '(', WS(), Optional(FirstOf(ElementTest(), SchemaElementTest())), ')', WS());
     }
 
     /**
      * [57] TextTest ::= "text" "(" ")"
      */
     Rule TextTest() {
-        return Sequence("text", '(', ')');
+        return Sequence("text", WS(), '(', WS(), ')', WS());
     }
 
     /**
      * [58] CommentTest ::= "comment" "(" ")"
      */
     Rule CommentTest() {
-        return Sequence("comment", '(', ')');
+        return Sequence("comment", WS(), '(', WS(), ')', WS());
     }
 
     /**
      * [59] PITest ::= "processing-instruction" "(" (NCName | StringLiteral)? ")"
      */
     Rule PITest() {
-        return Sequence("processing-instruction", '(', Optional(FirstOf(NCName(), StringLiteral())), ')');
+        return Sequence("processing-instruction", WS(), '(', WS(), Optional(FirstOf(NCName(), StringLiteral())), ')', WS());
     }
 
     /**
      * [60] AttributeTest ::= "attribute" "(" (AttribNameOrWildcard ("," TypeName)?)? ")"
      */
     Rule AttributeTest() {
-        return Sequence("attribute", '(', Optional(Sequence(AttribNameOrWildcard(), Optional(Sequence(',', TypeName())))), ')');
+        return Sequence("attribute", WS(), '(', WS(), Optional(Sequence(AttribNameOrWildcard(), Optional(Sequence(',', WS(), TypeName())))), ')', WS());
     }
 
     /**
      * [61] AttribNameOrWildcard ::= AttributeName | "*"
      */
     Rule AttribNameOrWildcard() {
-        return FirstOf(AttributeName(), '*');
+        return FirstOf(AttributeName(), Sequence('*', WS()));
     }
 
     /**
      * [62] SchemaAttributeTest ::= "schema-attribute" "(" AttributeDeclaration ")"
      */
     Rule SchemaAttributeTest() {
-        return Sequence("schema-attribute", '(', AttributeDeclaration(), ')');
+        return Sequence("schema-attribute", WS(), '(', WS(), AttributeDeclaration(), ')', WS());
     }
 
     /**
@@ -640,21 +646,21 @@ public class XPathParser extends BaseParser<Object> {
      * [64] ElementTest ::= "element" "(" (ElementNameOrWildcard ("," TypeName "?"?)?)? ")"
      */
     Rule ElementTest() {
-        return Sequence("element", '(', Optional(Sequence(ElementNameOrWildcard(), Optional(Sequence(',', TypeName(), Optional('?'))))), ')');
+        return Sequence("element", WS(), '(', WS(), Optional(Sequence(ElementNameOrWildcard(), Optional(Sequence(',', WS(), TypeName(), Optional(Sequence('?', WS())))))), ')', WS());
     }
 
     /**
      * [65] ElementNameOrWildcard ::= ElementName | "*"
      */
     Rule ElementNameOrWildcard() {
-        return FirstOf(ElementName(), '*');
+        return FirstOf(ElementName(), Sequence('*', WS()));
     }
 
     /**
      * [66] SchemaElementTest ::= "schema-element" "(" ElementDeclaration ")"
      */
     Rule SchemaElementTest() {
-        return Sequence("schema-element", '(', ElementDeclaration(), ')');
+        return Sequence("schema-element", WS(), '(', WS(), ElementDeclaration(), ')', WS());
     }
 
     /**
@@ -662,7 +668,7 @@ public class XPathParser extends BaseParser<Object> {
      */
     Rule ElementDeclaration() {
         return ElementName();
-        //return ElementName().label("ElementDeclaration");
+        //return ElementName().label("ElementDeclaration"); //TODO(AR) can we introduce rule wrappers with labels?
     }
 
     /**
@@ -690,30 +696,30 @@ public class XPathParser extends BaseParser<Object> {
      * [71] IntegerLiteral ::= Digits
      */
     Rule IntegerLiteral() {
-        return Digits();
+        return Sequence(Digits(), WS());
     }
 
     /**
-     * [72] DecimalLiteral ::= ("." Digits) | (Digits "." [0-9]*)   ws: explicit
+     * [72] DecimalLiteral ::= ("." Digits) | (Digits "." [0-9]*)   //ws: explicit
      */
     Rule DecimalLiteral() {
-        return FirstOf(Sequence('.', Digits()), Sequence(Digits(), '.', ZeroOrMore(CharRange('0', '9'))));
+        return Sequence(FirstOf(Sequence('.', Digits()), Sequence(Digits(), '.', ZeroOrMore(CharRange('0', '9')))), WS());
     }
 
     /**
-     * [73] DoubleLiteral ::= (("." Digits) | (Digits ("." [0-9]*)?)) [eE] [+-]? Digits     ws: explicit
+     * [73] DoubleLiteral ::= (("." Digits) | (Digits ("." [0-9]*)?)) [eE] [+-]? Digits     //ws: explicit
      */
     Rule DoubleLiteral() {
-        return Sequence(FirstOf(Sequence('.', Digits()), Sequence(Digits(), Optional(Sequence('.', ZeroOrMore(CharRange('0', '9')))))), IgnoreCase('e'), Optional(FirstOf('+', '-')), Digits());
+        return Sequence(FirstOf(Sequence('.', Digits()), Sequence(Digits(), Optional(Sequence('.', ZeroOrMore(CharRange('0', '9')))))), IgnoreCase('e'), Optional(FirstOf('+', '-')), Digits(), WS());
     }
 
     /**
-     * [74] StringLiteral ::= ('"' (EscapeQuot | [^"])* '"') | ("'" (EscapeApos | [^'])* "'")	ws: explicit
+     * [74] StringLiteral ::= ('"' (EscapeQuot | [^"])* '"') | ("'" (EscapeApos | [^'])* "'")	//ws: explicit
      */
     Rule StringLiteral() {
         return FirstOf(
-                Sequence("\"", ZeroOrMore(FirstOf(EscapeQuot(), NoneOf("\""))), "\""),
-                Sequence("'", ZeroOrMore(FirstOf(EscapeApos(), NoneOf("'"))), "'")
+                Sequence("\"", ZeroOrMore(FirstOf(EscapeQuot(), NoneOf("\""))), "\"", WS()),
+                Sequence("'", ZeroOrMore(FirstOf(EscapeApos(), NoneOf("'"))), "'", WS())
         );
     }
 
@@ -721,25 +727,25 @@ public class XPathParser extends BaseParser<Object> {
      * [75] EscapeQuot ::= '""'
      */
     Rule EscapeQuot() {
-        return String("\"\"");
+        return Sequence("\"\"", WS());
     }
 
     /**
      * [76] EscapeApos ::= "''"
      */
     Rule EscapeApos() {
-        return String("''");
+        return Sequence("''", WS());
     }
 
     /**
-     * [78] QName ::= [http://www.w3.org/TR/REC-xml-names/#NT-QName]Names   xgs: xml-version
+     * [78] QName ::= [http://www.w3.org/TR/REC-xml-names/#NT-QName]Names   //xgs: xml-version
      */
     Rule QName() {
-        return XmlNames_QName();
+        return Sequence(XmlNames_QName(), WS());
     }
 
     /**
-     * [79] NCName ::= [http://www.w3.org/TR/REC-xml-names/#NT-NCName]Names     xgs: xml-version
+     * [79] NCName ::= [http://www.w3.org/TR/REC-xml-names/#NT-NCName]Names     //xgs: xml-version
      */
     Rule NCName() {
         return XmlNames_NCName();
@@ -854,5 +860,14 @@ public class XPathParser extends BaseParser<Object> {
                 CharRange('\u0300', '\u036F'),
                 CharRange('\u203F', '\u2040')
         );
+    }
+
+    /**
+     * Same as [https://www.w3.org/TR/xml/#NT-S]S
+     *
+     * [3] S ::= (#x20 | #x9 | #xD | #xA)+
+     */
+    Rule Xml_S () {
+        return OneOrMore(AnyOf(new char[] {0x20, 0x9, 0xD, 0xA}));
     }
 }
