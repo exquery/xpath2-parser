@@ -24,9 +24,6 @@ import org.parboiled.BaseParser;
 import org.parboiled.Context;
 import org.parboiled.Rule;
 import org.parboiled.annotations.BuildParseTree;
-import org.parboiled.annotations.Label;
-import org.parboiled.annotations.SkipNode;
-import org.parboiled.annotations.SuppressNode;
 
 import com.evolvedbinary.xpath.parser.ast.*;
 
@@ -75,13 +72,24 @@ public class XPathParser extends BaseParser<Object> {
         }
     }
 
-    /** Whitespace handling **/
-
+    /**
+     * Whitespace handling
+     */
     Rule WS() {
+        //return Optional(FirstOf(Xml_S(), Comment()));
         return Optional(Xml_S());
-    };
+    }
 
-    /** RULES BELOW **/
+
+    /* XPath Rules */
+
+
+    /**
+     * [1] XPath ::= Expr
+     */
+    Rule XPath() {
+        return Expr();
+    }
 
     /**
      * [2] Expr ::= ExprSingle ("," ExprSingle)*
@@ -97,7 +105,49 @@ public class XPathParser extends BaseParser<Object> {
      *                      | OrExpr
      */
     Rule ExprSingle() {
-        return OrExpr();
+        return FirstOf(
+                ForExpr(),
+                QuantifiedExpr(),
+                IfExpr(),
+                OrExpr()
+        );
+    }
+
+    /**
+     * [4] ForExpr ::= SimpleForClause "return" ExprSingle
+     */
+    Rule ForExpr() {
+        return Sequence(SimpleForClause(), "return", WS(), ExprSingle());
+    }
+
+    /**
+     * [5] SimpleForClause ::= "for" "$" VarName "in" ExprSingle ("," "$" VarName "in" ExprSingle)*
+     */
+    Rule SimpleForClause() {
+        return Sequence(
+                "for", WS(), '$', WS(), VarName(), "in", WS(), ExprSingle(),
+                    ZeroOrMore(',', WS(), '$', WS(), VarName(), "in", WS(), ExprSingle())
+        );
+    }
+
+    /**
+     * [6] QuantifiedExpr ::= ("some" | "every") "$" VarName "in" ExprSingle ("," "$" VarName "in" ExprSingle)* "satisfies" ExprSingle
+     */
+    Rule QuantifiedExpr() {
+        return Sequence(
+                FirstOf("some", "every"), WS(), '$', WS(), VarName(), "in", WS(), ExprSingle(),
+                    ZeroOrMore(',', WS(), '$', WS(), VarName(), "in", WS(), ExprSingle()),
+                        "satisfies", WS(), ExprSingle()
+        );
+    }
+
+    /**
+     * [7] IfExpr ::= "if" "(" Expr ")" "then" ExprSingle "else" ExprSingle
+     */
+    Rule IfExpr() {
+        return Sequence(
+                "if", WS(), '(', WS(), Expr(), ')', WS(), "then", WS(), ExprSingle(), "else", WS(), ExprSingle()
+        );
     }
 
     /**
@@ -481,8 +531,10 @@ public class XPathParser extends BaseParser<Object> {
     Rule PrimaryExpr() {
         return FirstOf(
                 Literal(),
+                VarRef(),
                 ParenthesizedExpr(),
-                ContextItemExpr()
+                ContextItemExpr(),
+                FunctionCall()
         );
     }
 
@@ -498,6 +550,20 @@ public class XPathParser extends BaseParser<Object> {
      */
     Rule NumericLiteral() {
         return FirstOf(IntegerLiteral(), DecimalLiteral(), DoubleLiteral());
+    }
+
+    /**
+     * [44] VarRef ::= "$" VarName
+     */
+    Rule VarRef() {
+        return Sequence('$', WS(), VarName());
+    }
+
+    /**
+     * [45] VarName ::= QName
+     */
+    Rule VarName() {
+        return QName();
     }
 
     /**
@@ -519,7 +585,16 @@ public class XPathParser extends BaseParser<Object> {
     }
 
     /**
-     * [49] SingleType ::= AtomicType "?"?
+     * [48] FunctionCall ::= QName "(" (ExprSingle ("," ExprSingle)*)? ")"      //xgs:reserved-function-names
+     */
+    Rule FunctionCall() {
+        return Sequence(
+               QName(), '(', WS(), Optional(Sequence(ExprSingle(), ZeroOrMore(Sequence(',', WS(), ExprSingle())))), ')', WS()
+        );
+    }
+
+    /**
+     * [49] SingleType ::= AtomicType "?"?      //gn: parens
      */
     Rule SingleType() {
         return Sequence(AtomicType(), Optional(Sequence('?', WS())));
@@ -738,6 +813,13 @@ public class XPathParser extends BaseParser<Object> {
     }
 
     /**
+     * [77] Comment ::= "(:" (CommentContents | Comment)* ":)"      //ws: explicit
+     */
+    Rule Comment() {
+        return Sequence("(:", WS(), ZeroOrMore(CommentContents(), Comment()), ":)", WS()); //TODO(AR) do we have this right
+    }
+
+    /**
      * [78] QName ::= [http://www.w3.org/TR/REC-xml-names/#NT-QName]Names   //xgs: xml-version
      */
     Rule QName() {
@@ -756,6 +838,13 @@ public class XPathParser extends BaseParser<Object> {
      */
     Rule Digits() {
         return OneOrMore(CharRange('0', '9'));
+    }
+
+    /**
+     * [82] CommentContents ::= (Char+ - (Char* ('(:' | ':)') Char*))
+     */
+    Rule CommentContents() {
+        return TestNot(FirstOf("(:", ":)")); //TODO(AR) do we have this right?
     }
 
 
