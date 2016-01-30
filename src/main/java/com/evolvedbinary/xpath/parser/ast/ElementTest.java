@@ -24,38 +24,46 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Created by aretter on 30/01/2016.
  */
-public class AttributeTest extends KindTest {
+public class ElementTest extends KindTest {
     @Nullable final QNameW name;
     @Nullable QNameW typeName;
+    @Nullable boolean optionalType;
 
-    public AttributeTest() {
+    public ElementTest() {
         this(null);
     }
 
-    public AttributeTest(final QNameW name) {
+    public ElementTest(final QNameW name) {
         this(name, null);
     }
 
-    public AttributeTest(final QNameW name, final QNameW typeName) {
-        super(Kind.ATTRIBUTE);
+    public ElementTest(final QNameW name, final QNameW typeName) {
+        this(name, typeName, false);
+    }
+
+    public ElementTest(final QNameW name, final QNameW typeName, final Boolean optionalType) {
+        super(Kind.ELEMENT);
         this.name = name;
         this.typeName = typeName;
+        this.optionalType = optionalType == null ? false : optionalType;
     }
 
     @Override
     protected String describeParams() {
         return (name == null ? "" : name.toString()) +
-                (typeName == null ? "" : ", " + typeName.toString());
+                (typeName == null ? "" : ", " + typeName.toString()) +
+                (optionalType ? "?" : "");
     }
 
     @Override
     public boolean equals(final Object obj) {
-        if(obj != null && obj instanceof AttributeTest) {
-            final AttributeTest other = (AttributeTest)obj;
+        if(obj != null && obj instanceof ElementTest) {
+            final ElementTest other = (ElementTest)obj;
 
             return
                 ((this.name == null && other.name == null) || this.name.equals(other.name)) &&
-                ((this.typeName == null && other.typeName == null) || this.typeName.equals(other.typeName));
+                ((this.typeName == null && other.typeName == null) || this.typeName.equals(other.typeName)) &&
+                this.optionalType == other.optionalType;
         }
         return false;
     }

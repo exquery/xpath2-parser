@@ -19,27 +19,22 @@
  */
 package com.evolvedbinary.xpath.parser.ast;
 
+import java.math.BigInteger;
+
 /**
- * Created by aretter on 28/01/2016.
+ * Created by aretter on 10/02/2016.
  */
-public class NameTest extends AbstractASTNode implements NodeTest {
-    private final QNameW qname;
+public class IntegerLiteral extends NumericLiteral<BigInteger> {
 
-    public NameTest(final QNameW qname) {
-        this.qname = qname;
+
+    public IntegerLiteral(final String value) {
+        super(new BigInteger(value));
     }
 
-    @Override
-    public final String describe() {
-        return "NameTest(" + qname + ")";
-    }
+
 
     @Override
-    public boolean equals(final Object obj) {
-        if(obj != null && obj instanceof NameTest) {
-            return ((NameTest)obj).qname.equals(qname);
-        }
-
-        return false;
+    protected String describe() {
+        return "IntegerLiteral(" + getValue() + ")";
     }
 }

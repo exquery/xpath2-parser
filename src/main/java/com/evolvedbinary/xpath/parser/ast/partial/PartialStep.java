@@ -17,31 +17,29 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-package com.evolvedbinary.xpath.parser.ast;
+package com.evolvedbinary.xpath.parser.ast.partial;
+
+import com.evolvedbinary.xpath.parser.ast.Axis;
+import com.evolvedbinary.xpath.parser.ast.NodeTest;
+import com.evolvedbinary.xpath.parser.ast.Step;
 
 /**
- * Created by aretter on 28/01/2016.
+ * Created by aretter on 10/02/2016.
  */
-public class QName extends ASTNode {
-    public final static String WILDCARD = "*";
-    private final String prefix;
-    private final String localPart;
+public class PartialStep extends AbstractPartialASTNode<Step, NodeTest> {
+    private final Axis axis;
 
-    public QName(final String localPart) {
-        this(null, localPart);
-    }
-
-    public QName(final String prefix, final String localPart) {
-        this.prefix = prefix;
-        this.localPart = localPart;
+    public PartialStep(final Axis axis) {
+        this.axis = axis;
     }
 
     @Override
-    public final String describe() {
-        if(prefix != null) {
-            return "QName(" + prefix + ":" + localPart + ")";
-        } else {
-            return "QName(" + localPart + ")";
-        }
+    public Step complete(final NodeTest nodeTest) {
+        return new Step(axis, nodeTest);
+    }
+
+    @Override
+    protected String describe() {
+        return "Step(" + axis + ", ?)";
     }
 }

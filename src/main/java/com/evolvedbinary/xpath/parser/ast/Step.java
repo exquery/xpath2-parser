@@ -20,33 +20,30 @@
 package com.evolvedbinary.xpath.parser.ast;
 
 /**
- * Created by aretter on 28/01/2016.
+ * Created by aretter on 10/02/2016.
  */
-public enum Step {
-    CHILD("child"),
-    PARENT("parent"),
-    PRECEDING_SIBLING("preceding-sibling"),
-    PRECEDING("preceding"),
-    ANCESTOR_OR_SELF("ancestor-or-self"),
-    ANCESTOR("ancestor"),
-    SELF("self"),
-    DESCENDANT_OR_SELF("descendant-or-self"),
-    DESCENDANT("descendant"),
-    FOLLOWING_SIBLING("following-sibling"),
-    FOLLOWING("following"),
-    NAMESPACE("namespace");
+public class Step extends AbstractASTNode {
+    private final Axis axis;
+    private final NodeTest nodeTest;
 
-    final String xpSyntax;
-    Step(final String xpSyntax) {
-        this.xpSyntax = xpSyntax;
+    public Step(final Axis axis, final NodeTest nodeTest) {
+        this.axis = axis;
+        this.nodeTest = nodeTest;
     }
 
-    public final static Step fromSyntax(final String xpSyntax) {
-        for(final Step step: values()) {
-            if(step.xpSyntax.equals(xpSyntax)) {
-                return step;
-            }
+    @Override
+    protected String describe() {
+        return "Step(" + axis.getSyntax() + "::" + nodeTest + ")";
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if(obj != null && obj instanceof Step) {
+            final Step other = (Step)obj;
+            return other.axis == this.axis &&
+                    other.nodeTest.equals(this.nodeTest);
         }
-        throw new IllegalArgumentException("No such step: '" + xpSyntax + "'");
+
+        return false;
     }
 }

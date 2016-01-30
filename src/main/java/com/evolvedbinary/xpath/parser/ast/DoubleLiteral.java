@@ -19,27 +19,18 @@
  */
 package com.evolvedbinary.xpath.parser.ast;
 
+import java.math.BigDecimal;
+
 /**
- * Created by aretter on 28/01/2016.
+ * Created by aretter on 10/02/2016.
  */
-public class NameTest extends AbstractASTNode implements NodeTest {
-    private final QNameW qname;
-
-    public NameTest(final QNameW qname) {
-        this.qname = qname;
+public class DoubleLiteral extends NumericLiteral<BigDecimal> {
+    public DoubleLiteral(final String value) {
+        super(new BigDecimal(value));
     }
 
     @Override
-    public final String describe() {
-        return "NameTest(" + qname + ")";
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if(obj != null && obj instanceof NameTest) {
-            return ((NameTest)obj).qname.equals(qname);
-        }
-
-        return false;
+    protected String describe() {
+        return "DoubleLiteral(" + getValue() + ")";
     }
 }

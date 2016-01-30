@@ -22,24 +22,24 @@ package com.evolvedbinary.xpath.parser.ast;
 /**
  * Created by aretter on 28/01/2016.
  */
-public class AxisStep extends ASTNode {
-    private Step step;
-    private XTest test;
+public class AxisStep extends AbstractASTNode {
+    private Axis step;
+    private NodeTest test;
 
-    public AxisStep(final Step step) {
+    public AxisStep(final Axis step) {
         this.step = step;
     }
 
-    public AxisStep(final Step step, XTest test) {
+    public AxisStep(final Axis step, final NodeTest test) {
         this(step);
         this.test = test;
     }
 
-    public final void setStep(final Step step) {
+    public final void setStep(final Axis step) {
         this.step = step;
     }
 
-    public final void setTest(final XTest test) {
+    public final void setTest(final NodeTest test) {
         this.test = test;
     }
 

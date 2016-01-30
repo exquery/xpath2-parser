@@ -17,34 +17,21 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-package com.evolvedbinary.xpath.parser.ast;
-
-import java.util.ArrayDeque;
+package com.evolvedbinary.functional;
 
 /**
- * Created by aretter on 28/01/2016.
+ * Replacement interface for Java 8 {@link java.util.function.Function}
+ *
+ * @param <T> the type of the input to the function
+ * @param <R> the type of the result of the function
  */
-public class Path extends ASTNode {
-    final ArrayDeque<AxisStep> steps = new ArrayDeque<AxisStep>();
+public interface Function<T, R> {
 
-    public Path(final AxisStep step) {
-        steps.add(step);
-    }
-
-    public void add(final AxisStep step) {
-        steps.add(step);
-    }
-
-    public AxisStep pop() {
-        return steps.remove();
-    }
-
-    public void push(final AxisStep step) {
-        steps.push(step);
-    }
-
-    @Override
-    public final String describe() {
-        return "Path(" + steps + ")";
-    }
+    /**
+     * Applies this function to the given argument.
+     *
+     * @param t the function argument
+     * @return the function result
+     */
+    R apply(final T t);
 }

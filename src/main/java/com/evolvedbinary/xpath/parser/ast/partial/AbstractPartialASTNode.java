@@ -17,29 +17,19 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-package com.evolvedbinary.xpath.parser.ast;
+package com.evolvedbinary.xpath.parser.ast.partial;
+
+import com.evolvedbinary.xpath.parser.ast.ASTNode;
+import com.evolvedbinary.xpath.parser.ast.AbstractASTNode;
 
 /**
- * Created by aretter on 28/01/2016.
+ * @param <T> The type of the ASTNode which is to be completed
+ * @param <U> The type of the value to use to complete the partial AST node
  */
-public class NameTest extends AbstractASTNode implements NodeTest {
-    private final QNameW qname;
-
-    public NameTest(final QNameW qname) {
-        this.qname = qname;
-    }
+public abstract class AbstractPartialASTNode<T extends ASTNode, U> extends AbstractASTNode implements PartialASTNode<T, U> {
 
     @Override
-    public final String describe() {
-        return "NameTest(" + qname + ")";
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if(obj != null && obj instanceof NameTest) {
-            return ((NameTest)obj).qname.equals(qname);
-        }
-
-        return false;
+    public String toString() {
+        return "P_" + super.toString();
     }
 }

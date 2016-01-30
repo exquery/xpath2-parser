@@ -22,24 +22,12 @@ package com.evolvedbinary.xpath.parser.ast;
 /**
  * Created by aretter on 28/01/2016.
  */
-public class NameTest extends AbstractASTNode implements NodeTest {
-    private final QNameW qname;
+public abstract class AbstractASTNode implements ASTNode {
 
-    public NameTest(final QNameW qname) {
-        this.qname = qname;
-    }
+    protected abstract String describe();
 
     @Override
-    public final String describe() {
-        return "NameTest(" + qname + ")";
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if(obj != null && obj instanceof NameTest) {
-            return ((NameTest)obj).qname.equals(qname);
-        }
-
-        return false;
+    public String toString() {
+        return "AST_" + describe();
     }
 }

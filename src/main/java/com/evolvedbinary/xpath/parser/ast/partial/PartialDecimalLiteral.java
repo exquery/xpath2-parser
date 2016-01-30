@@ -17,29 +17,32 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-package com.evolvedbinary.xpath.parser.ast;
+package com.evolvedbinary.xpath.parser.ast.partial;
+
+import com.evolvedbinary.xpath.parser.ast.DecimalLiteral;
+import org.jetbrains.annotations.Nullable;
 
 /**
- * Created by aretter on 28/01/2016.
+ * Created by aretter on 10/02/2016.
  */
-public class NameTest extends AbstractASTNode implements NodeTest {
-    private final QNameW qname;
+public class PartialDecimalLiteral extends AbstractPartialASTNode<DecimalLiteral, String> {
+    final String characteristic;
 
-    public NameTest(final QNameW qname) {
-        this.qname = qname;
+    public PartialDecimalLiteral(final String characteristic) {
+        this.characteristic = characteristic;
     }
 
     @Override
-    public final String describe() {
-        return "NameTest(" + qname + ")";
+    protected String describe() {
+        return "DecimalLiteral(" + characteristic + ".?)";
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if(obj != null && obj instanceof NameTest) {
-            return ((NameTest)obj).qname.equals(qname);
+    public DecimalLiteral complete(@Nullable final String mantissa) {
+        if(mantissa == null) {
+            return new DecimalLiteral(characteristic);
+        } else {
+            return new DecimalLiteral(characteristic + "." + mantissa);
         }
-
-        return false;
     }
 }

@@ -22,5 +22,36 @@ package com.evolvedbinary.xpath.parser.ast;
 /**
  * Created by aretter on 28/01/2016.
  */
-public interface XTest {
+public enum Axis implements ASTNode {
+    CHILD("child"),
+    PARENT("parent"),
+    PRECEDING_SIBLING("preceding-sibling"),
+    PRECEDING("preceding"),
+    ANCESTOR_OR_SELF("ancestor-or-self"),
+    ANCESTOR("ancestor"),
+    SELF("self"),
+    DESCENDANT_OR_SELF("descendant-or-self"),
+    DESCENDANT("descendant"),
+    FOLLOWING_SIBLING("following-sibling"),
+    FOLLOWING("following"),
+    NAMESPACE("namespace"),
+    ATTRIBUTE("attribute");
+
+    final String syntax;
+    Axis(final String syntax) {
+        this.syntax = syntax;
+    }
+
+    public final static Axis fromSyntax(final String syntax) {
+        for(final Axis step: values()) {
+            if(step.syntax.equals(syntax)) {
+                return step;
+            }
+        }
+        throw new IllegalArgumentException("No such axis: '" + syntax + "'");
+    }
+
+    public String getSyntax() {
+        return syntax;
+    }
 }

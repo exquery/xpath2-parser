@@ -19,25 +19,34 @@
  */
 package com.evolvedbinary.xpath.parser.ast;
 
-/**
- * Created by aretter on 28/01/2016.
- */
-public class NameTest extends AbstractASTNode implements NodeTest {
-    private final QNameW qname;
+import org.jetbrains.annotations.Nullable;
 
-    public NameTest(final QNameW qname) {
-        this.qname = qname;
+/**
+ * Created by aretter on 30/01/2016.
+ */
+public class PITest extends KindTest {
+    @Nullable
+    final String name;
+
+    public PITest() {
+        this(null);
+    }
+
+    public PITest(final String name) {
+        super(Kind.PROCESSING_INSTRUCTION);
+        this.name = name;
     }
 
     @Override
-    public final String describe() {
-        return "NameTest(" + qname + ")";
+    protected String describeParams() {
+        return name == null ? "" : name;
     }
 
     @Override
     public boolean equals(final Object obj) {
-        if(obj != null && obj instanceof NameTest) {
-            return ((NameTest)obj).qname.equals(qname);
+        if(obj != null && obj instanceof PITest) {
+            final PITest other = (PITest)obj;
+            return (other.name == null && this.name == null) || other.name.equals(this.name);
         }
 
         return false;

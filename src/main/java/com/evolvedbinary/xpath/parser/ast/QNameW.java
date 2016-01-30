@@ -19,25 +19,43 @@
  */
 package com.evolvedbinary.xpath.parser.ast;
 
-/**
- * Created by aretter on 28/01/2016.
- */
-public class NameTest extends AbstractASTNode implements NodeTest {
-    private final QNameW qname;
+import org.jetbrains.annotations.Nullable;
 
-    public NameTest(final QNameW qname) {
-        this.qname = qname;
+/**
+ * Similar to a QName but where the prefix or localPart
+ * may be a WILDCARD i.e. "*"
+ */
+public class QNameW extends AbstractASTNode {
+    public final static String WILDCARD = "*";
+
+    @Nullable private final String prefix;
+    private final String localPart;
+
+    public QNameW(final String localPart) {
+        this(null, localPart);
+    }
+
+    public QNameW(final String prefix, final String localPart) {
+        this.prefix = prefix;
+        this.localPart = localPart;
     }
 
     @Override
     public final String describe() {
-        return "NameTest(" + qname + ")";
+        if(prefix != null) {
+            return "QNameW(" + prefix + ":" + localPart + ")";
+        } else {
+            return "QNameW(" + localPart + ")";
+        }
     }
 
     @Override
     public boolean equals(final Object obj) {
-        if(obj != null && obj instanceof NameTest) {
-            return ((NameTest)obj).qname.equals(qname);
+        if(obj != null && obj instanceof QNameW) {
+            final QNameW other = (QNameW)obj;
+
+            return other.localPart.equals(this.localPart) &&
+                    (other.prefix == null ? "" : other.prefix).equals(this.prefix == null ? "" : this.prefix);
         }
 
         return false;

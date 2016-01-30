@@ -20,24 +20,25 @@
 package com.evolvedbinary.xpath.parser.ast;
 
 /**
- * Created by aretter on 28/01/2016.
+ * Created by aretter on 11/02/2016.
  */
-public class NameTest extends AbstractASTNode implements NodeTest {
-    private final QNameW qname;
+public class VarRef extends AbstractASTNode {
 
-    public NameTest(final QNameW qname) {
-        this.qname = qname;
+    private final QNameW varName;
+
+    public VarRef(final QNameW varName) {
+        this.varName = varName;
     }
 
     @Override
-    public final String describe() {
-        return "NameTest(" + qname + ")";
+    protected String describe() {
+        return "VarRef(" + varName + ")";
     }
 
     @Override
     public boolean equals(final Object obj) {
-        if(obj != null && obj instanceof NameTest) {
-            return ((NameTest)obj).qname.equals(qname);
+        if(obj != null && obj instanceof VarRef) {
+            return ((VarRef)obj).varName.equals(varName);
         }
 
         return false;

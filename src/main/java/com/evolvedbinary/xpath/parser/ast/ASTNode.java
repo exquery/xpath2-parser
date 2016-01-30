@@ -20,14 +20,7 @@
 package com.evolvedbinary.xpath.parser.ast;
 
 /**
- * Created by aretter on 28/01/2016.
+ * Created by aretter on 29/01/2016.
  */
-public abstract class ASTNode {
-
-    protected abstract String describe();
-
-    @Override
-    public final String toString() {
-        return "AST_" + describe();
-    }
+public interface ASTNode {
 }

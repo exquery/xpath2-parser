@@ -17,29 +17,28 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-package com.evolvedbinary.xpath.parser.ast;
+package com.evolvedbinary.xpath.parser.ast.partial;
+
+import com.evolvedbinary.xpath.parser.ast.QNameW;
 
 /**
- * Created by aretter on 28/01/2016.
+ * Created by aretter on 30/01/2016.
  */
-public class NameTest extends AbstractASTNode implements NodeTest {
-    private final QNameW qname;
+public class PartialPrefixedName extends AbstractPartialASTNode<QNameW, String> {
 
-    public NameTest(final QNameW qname) {
-        this.qname = qname;
+    private final String prefix;
+
+    public PartialPrefixedName(final String prefix) {
+        this.prefix = prefix;
     }
 
     @Override
-    public final String describe() {
-        return "NameTest(" + qname + ")";
+    public QNameW complete(final String localPart) {
+        return new QNameW(prefix, localPart);
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if(obj != null && obj instanceof NameTest) {
-            return ((NameTest)obj).qname.equals(qname);
-        }
-
-        return false;
+    protected String describe() {
+        return "PrefixedName(" + prefix + ", ?)";
     }
 }

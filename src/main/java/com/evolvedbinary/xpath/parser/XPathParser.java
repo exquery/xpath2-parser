@@ -19,6 +19,8 @@
  */
 package com.evolvedbinary.xpath.parser;
 
+import com.evolvedbinary.functional.Either;
+import com.evolvedbinary.xpath.parser.ast.partial.*;
 import org.parboiled.Action;
 import org.parboiled.BaseParser;
 import org.parboiled.Context;
@@ -28,7 +30,7 @@ import org.parboiled.annotations.BuildParseTree;
 import com.evolvedbinary.xpath.parser.ast.*;
 
 @BuildParseTree
-public class XPathParser extends BaseParser<Object> {
+public class XPathParser extends BaseParser<ASTNode> {
 
     private final boolean enableActions;
 
@@ -36,8 +38,9 @@ public class XPathParser extends BaseParser<Object> {
         this.enableActions = enableActions;
     }
 
+    //TODO(AR) remove!
     @Override
-    public boolean push(Object value) {
+    public boolean push(ASTNode value) {
         if(enableActions) {
             return super.push(value);
         } else {
@@ -46,7 +49,7 @@ public class XPathParser extends BaseParser<Object> {
     }
 
     @Override
-    public Object pop() {
+    public ASTNode pop() {
         if(enableActions) {
             return super.pop();
         } else {
@@ -55,7 +58,7 @@ public class XPathParser extends BaseParser<Object> {
     }
 
     @Override
-    public Object peek() {
+    public ASTNode peek() {
         if(enableActions) {
             return super.peek();
         } else {
@@ -70,6 +73,23 @@ public class XPathParser extends BaseParser<Object> {
         } else {
             return true;
         }
+
+        //TODO(AR)
+        //getContext().getValueStack().peek()
+    }
+
+    <T> ASTNode complete(final T value, final ASTNode partial) {
+        if(!(partial instanceof PartialASTNode)) {
+            throw new IllegalStateException("Cannot complete non-partial AST Node: " + partial.getClass());
+        }
+        return ((PartialASTNode<?, T>)partial).complete(value);
+    }
+
+    ASTNode completeOptional(ASTNode partial) {
+        while(partial instanceof PartialASTNode) {
+            partial = ((PartialASTNode)partial).complete(null);
+        }
+        return partial;
     }
 
     /**
@@ -256,9 +276,6 @@ public class XPathParser extends BaseParser<Object> {
      */
     Rule ValueExpr() {
         return PathExpr();
-        //TODO
-        //return Sequence("1", push("HELLLLLLLLLLLOOOO"));
-        //return Sequence(RelativePathExpr(), push("hello world"));
     }
 
     /**
@@ -289,18 +306,7 @@ public class XPathParser extends BaseParser<Object> {
      */
     Rule PathExpr() {
         return FirstOf(
-                Sequence("//", WS(), RelativePathExpr(), new Action() {
-                    @Override
-                    public boolean run(final Context context) {
-                        final Path path = (Path) pop();
-                        if(path != null) {
-                            final AxisStep head = path.pop();
-                            head.setStep(Step.DESCENDANT_OR_SELF);
-                            path.push(head);
-                        }
-                        return push(path);
-                    }
-                }),
+                Sequence("//", WS(), RelativePathExpr()),
                 Sequence('/', WS(), Optional(RelativePathExpr())),
                 RelativePathExpr()
         );
@@ -311,36 +317,11 @@ public class XPathParser extends BaseParser<Object> {
      */
     Rule RelativePathExpr() {
         return Sequence(
-                StepExpr(), new Action() {
-                    @Override
-                    public boolean run(final Context context) {
-                        if (peek() instanceof AxisStep) {
-                            final AxisStep step = (AxisStep) pop();
-                            return push(new Path(step));
-                        } else {
-                            //TODO(AR) don't understand why this happens!
-                            return dup();
-                        }
-                    }
-                },
+                StepExpr(),
                 ZeroOrMore(
                         Sequence(
-                                FirstOf("//", '/'), push("!" + match()), WS(),
-                                StepExpr(), new Action() {
-                                    @Override
-                                    public boolean run(Context context) {
-                                        final AxisStep step = (AxisStep)pop();
-                                        final String slashes = (String)pop();
-                                        if(slashes != null && slashes.equals("!//")) {
-                                            step.setStep(Step.DESCENDANT_OR_SELF);
-                                        }
-                                        final Path path = (Path)pop();
-                                        if(path != null) {
-                                            path.add(step);
-                                        }
-                                        return push(path);
-                                    }
-                                }
+                                FirstOf("//", '/'), WS(),
+                                StepExpr()
                         )
                 )
         );
@@ -366,16 +347,8 @@ public class XPathParser extends BaseParser<Object> {
     Rule ForwardStep() {
         return FirstOf(
                 Sequence(
-                        ForwardAxis(), push(new AxisStep((Step) pop())),
-                        NodeTest(), new Action() {
-                            @Override
-                            public boolean run(final Context context) {
-                                final XTest test = (XTest) pop();
-                                final AxisStep step = (AxisStep) pop();
-                                step.setTest(test);
-                                return push(step);
-                            }
-                        }
+                        ForwardAxis(), push(new PartialStep((Axis)pop())),
+                        NodeTest(), push(complete(pop(), pop()))
                 ),
                 AbbrevForwardStep()
         );
@@ -394,12 +367,13 @@ public class XPathParser extends BaseParser<Object> {
     Rule ForwardAxis() {
         return Sequence(FirstOf(
                 "child",
+                "attribute",
                 "self",
                 "descendant-or-self",
                 "descendant",
                 "following-sibling",
                 "following",
-                "namespace"), push(Step.fromSyntax(match())), WS(),
+                "namespace"), push(Axis.fromSyntax(match())), WS(),
                 "::", WS());
     }
 
@@ -407,20 +381,10 @@ public class XPathParser extends BaseParser<Object> {
      * [31] AbbrevForwardStep ::= "@"? NodeTest
      */
     Rule AbbrevForwardStep() {
-        return Sequence(
-                Optional(Sequence('@', WS())), push("!@" + match().trim().length()),
-                NodeTest(), new Action() {
-                    @Override
-                    public boolean run(final Context context) {
-                        final XTest test = (XTest) pop();
-                        final AxisStep step = new AxisStep(Step.CHILD, test);
-                        final String maybeAttributeTest = (String) pop();
-                        if (maybeAttributeTest != null && maybeAttributeTest.equals("!@1")) {
-                            step.setTest(new AttributeTest(test));
-                        }
-                        return push(step);
-                    }
-                });
+        return FirstOf(
+                Sequence('@', WS(), NodeTest(), push(new Step(Axis.ATTRIBUTE, (NodeTest)pop()))),
+                Sequence(NodeTest(), push(new Step(Axis.CHILD, (NodeTest)pop())))
+        );
     }
 
     /**
@@ -429,16 +393,8 @@ public class XPathParser extends BaseParser<Object> {
     Rule ReverseStep() {
         return FirstOf(
                 Sequence(
-                        ReverseAxis(), push(new AxisStep((Step)pop())),
-                        NodeTest(), new Action() {
-                            @Override
-                            public boolean run(final Context context) {
-                                final XTest test = (XTest) pop();
-                                final AxisStep step = (AxisStep) pop();
-                                step.setTest(test);
-                                return push(step);
-                            }
-                        }
+                        ReverseAxis(), push(new PartialStep((Axis)pop())),
+                        NodeTest(), push(complete(pop(), pop()))
                 ),
                 AbbrevReverseStep()
         );
@@ -453,11 +409,11 @@ public class XPathParser extends BaseParser<Object> {
      */
     Rule ReverseAxis() {
         return Sequence(FirstOf(
-                "preceding-sibling",
-                "preceding",
                 "parent",
                 "ancestor-or-self",
-                "ancestor"), push(Step.fromSyntax(match())), WS(),
+                "ancestor",
+                "preceding-sibling",
+                "preceding"), push(Axis.fromSyntax(match())), WS(),
                 "::", WS());
     }
 
@@ -465,21 +421,21 @@ public class XPathParser extends BaseParser<Object> {
      * [34] AbbrevReverseStep ::= ".."
      */
     Rule AbbrevReverseStep() {
-        return Sequence("..", push(new AxisStep(Step.PARENT)), WS());
+        return Sequence("..", push(new Step(Axis.PARENT, new AnyKindTest())), WS());
     }
 
     /**
      * [35] NodeTest ::= KindTest | NameTest
      */
     Rule NodeTest() {
-        return Sequence(FirstOf(KindTest(), NameTest()), push(new NameTest((QName)pop())));
+        return FirstOf(KindTest(), NameTest());
     }
 
     /**
      * [36] NameTest ::= QName | Wildcard
      */
     Rule NameTest() {
-        return FirstOf(Wildcard(), QName());
+        return Sequence(FirstOf(Wildcard(), QName()), push(new NameTest((QNameW)pop())));
     }
 
     /**
@@ -489,9 +445,9 @@ public class XPathParser extends BaseParser<Object> {
      */
     Rule Wildcard() {
         return FirstOf(
-                Sequence(NCName(), push(new QName(match(), QName.WILDCARD)), ':', '*'),
-                Sequence('*', ':', NCName(), push(new QName(QName.WILDCARD, match()))),
-                Sequence('*', push(new QName(QName.WILDCARD)))
+                Sequence(NCName(), push(new QNameW(match(), QNameW.WILDCARD)), ':', '*'),
+                Sequence('*', ':', NCName(), push(new QNameW(QNameW.WILDCARD, match()))),
+                Sequence('*', push(new QNameW(QNameW.WILDCARD)))
         );
     }
 
@@ -556,7 +512,7 @@ public class XPathParser extends BaseParser<Object> {
      * [44] VarRef ::= "$" VarName
      */
     Rule VarRef() {
-        return Sequence('$', WS(), VarName());
+        return Sequence('$', WS(), VarName(), push(new VarRef((QNameW)pop())));
     }
 
     /**
@@ -658,56 +614,58 @@ public class XPathParser extends BaseParser<Object> {
      * [55] AnyKindTest ::= "node" "(" ")"
      */
     Rule AnyKindTest() {
-        return Sequence("node", WS(), '(', WS(), ')', WS());
+        return Sequence("node", push(new AnyKindTest()), WS(), '(', WS(), ')', WS());
     }
 
     /**
      * [56] DocumentTest ::= "document-node" "(" (ElementTest | SchemaElementTest)? ")"
      */
     Rule DocumentTest() {
-        return Sequence("document-node", WS(), '(', WS(), Optional(FirstOf(ElementTest(), SchemaElementTest())), ')', WS());
+        return Sequence("document-node", push(new PartialDocumentTest()), WS(), '(', WS(), Optional(FirstOf(Sequence(ElementTest(), push(complete(Either.Left(pop()), pop()))), Sequence(SchemaElementTest(), push(complete(Either.Right(pop()), pop()))))), ')', WS());
     }
 
     /**
      * [57] TextTest ::= "text" "(" ")"
      */
     Rule TextTest() {
-        return Sequence("text", WS(), '(', WS(), ')', WS());
+        return Sequence("text", push(TextTest.instance()), WS(), '(', WS(), ')', WS());
     }
 
     /**
      * [58] CommentTest ::= "comment" "(" ")"
      */
     Rule CommentTest() {
-        return Sequence("comment", WS(), '(', WS(), ')', WS());
+        return Sequence("comment", push(new CommentTest()), WS(), '(', WS(), ')', WS());
     }
 
     /**
      * [59] PITest ::= "processing-instruction" "(" (NCName | StringLiteral)? ")"
      */
     Rule PITest() {
-        return Sequence("processing-instruction", WS(), '(', WS(), Optional(FirstOf(NCName(), StringLiteral())), ')', WS());
+        //TODO(AR) do we need to differentiate between the NCName and the StringLiteral, instead of treading both as java.lang.String?
+
+        return Sequence("processing-instruction", push(new PartialPITest()), WS(), '(', WS(), Optional(FirstOf(Sequence(NCName(), push(complete(match(), pop()))), Sequence(StringLiteral(), push(complete(((StringLiteral)pop()).getValue(), pop()))))), ')', WS(), push(completeOptional(pop())));
     }
 
     /**
      * [60] AttributeTest ::= "attribute" "(" (AttribNameOrWildcard ("," TypeName)?)? ")"
      */
     Rule AttributeTest() {
-        return Sequence("attribute", WS(), '(', WS(), Optional(Sequence(AttribNameOrWildcard(), Optional(Sequence(',', WS(), TypeName())))), ')', WS());
+        return Sequence("attribute", push(new PartialAttributeTest()), WS(), '(', WS(), Optional(Sequence(AttribNameOrWildcard(), push(complete(pop(), pop())), Optional(Sequence(',', WS(), TypeName(), push(complete(pop(), pop())))))), ')', WS(), push(completeOptional(pop())));
     }
 
     /**
      * [61] AttribNameOrWildcard ::= AttributeName | "*"
      */
     Rule AttribNameOrWildcard() {
-        return FirstOf(AttributeName(), Sequence('*', WS()));
+        return FirstOf(AttributeName(), Sequence('*', push(new QNameW(QNameW.WILDCARD)), WS()));
     }
 
     /**
      * [62] SchemaAttributeTest ::= "schema-attribute" "(" AttributeDeclaration ")"
      */
     Rule SchemaAttributeTest() {
-        return Sequence("schema-attribute", WS(), '(', WS(), AttributeDeclaration(), ')', WS());
+        return Sequence("schema-attribute", WS(), '(', WS(), AttributeDeclaration(), push(new SchemaAttributeTest((QNameW)pop())), ')', WS());
     }
 
     /**
@@ -721,21 +679,21 @@ public class XPathParser extends BaseParser<Object> {
      * [64] ElementTest ::= "element" "(" (ElementNameOrWildcard ("," TypeName "?"?)?)? ")"
      */
     Rule ElementTest() {
-        return Sequence("element", WS(), '(', WS(), Optional(Sequence(ElementNameOrWildcard(), Optional(Sequence(',', WS(), TypeName(), Optional(Sequence('?', WS())))))), ')', WS());
+        return Sequence("element", push(new PartialElementTest()), WS(), '(', WS(), Optional(Sequence(ElementNameOrWildcard(), push(complete(pop(), pop())), Optional(Sequence(',', WS(), TypeName(), push(complete(pop(), pop())), Optional(Sequence('?', push(complete(Boolean.TRUE, pop())), WS())))))), ')', WS(), push(completeOptional(pop())));
     }
 
     /**
      * [65] ElementNameOrWildcard ::= ElementName | "*"
      */
     Rule ElementNameOrWildcard() {
-        return FirstOf(ElementName(), Sequence('*', WS()));
+        return FirstOf(ElementName(), Sequence('*', push(new QNameW(QNameW.WILDCARD)), WS()));
     }
 
     /**
      * [66] SchemaElementTest ::= "schema-element" "(" ElementDeclaration ")"
      */
     Rule SchemaElementTest() {
-        return Sequence("schema-element", WS(), '(', WS(), ElementDeclaration(), ')', WS());
+        return Sequence("schema-element", WS(), '(', WS(), ElementDeclaration(), push(new SchemaElementTest((QNameW)pop())), ')', WS());
     }
 
     /**
@@ -771,21 +729,35 @@ public class XPathParser extends BaseParser<Object> {
      * [71] IntegerLiteral ::= Digits
      */
     Rule IntegerLiteral() {
-        return Sequence(Digits(), WS());
+        return Sequence(Digits(), push(new IntegerLiteral(match())), WS());
     }
 
     /**
      * [72] DecimalLiteral ::= ("." Digits) | (Digits "." [0-9]*)   //ws: explicit
      */
     Rule DecimalLiteral() {
-        return Sequence(FirstOf(Sequence('.', Digits()), Sequence(Digits(), '.', ZeroOrMore(CharRange('0', '9')))), WS());
+        return Sequence(
+                FirstOf(
+                        Sequence('.', Digits(), push(new DecimalLiteral("0." + match()))),
+                        Sequence(Digits(), push(new PartialDecimalLiteral(match())), '.', ZeroOrMore(CharRange('0', '9')), push(complete(match(), pop())))
+                ),
+        WS());
     }
 
     /**
      * [73] DoubleLiteral ::= (("." Digits) | (Digits ("." [0-9]*)?)) [eE] [+-]? Digits     //ws: explicit
      */
     Rule DoubleLiteral() {
-        return Sequence(FirstOf(Sequence('.', Digits()), Sequence(Digits(), Optional(Sequence('.', ZeroOrMore(CharRange('0', '9')))))), IgnoreCase('e'), Optional(FirstOf('+', '-')), Digits(), WS());
+        return Sequence(
+                FirstOf(
+                        Sequence(push(new PartialDoubleLiteral("0")), '.', Digits(), push(complete(match(), pop()))),
+                        Sequence(Digits(), push(new PartialDoubleLiteral(match())), Sequence(Optional(Sequence('.', ZeroOrMore(CharRange('0', '9')))), push(complete(match().isEmpty() ? null : match().substring(1), pop()))))
+                ),
+                IgnoreCase('e'),
+                Sequence(Optional(FirstOf('+', '-')), push(complete(match() , pop()))),
+                Digits(), push(complete(match(), pop())),
+                WS()
+        );
     }
 
     /**
@@ -793,8 +765,8 @@ public class XPathParser extends BaseParser<Object> {
      */
     Rule StringLiteral() {
         return FirstOf(
-                Sequence("\"", ZeroOrMore(FirstOf(EscapeQuot(), NoneOf("\""))), "\"", WS()),
-                Sequence("'", ZeroOrMore(FirstOf(EscapeApos(), NoneOf("'"))), "'", WS())
+                Sequence("\"", Sequence(ZeroOrMore(FirstOf(EscapeQuot(), NoneOf("\""))), push(new StringLiteral(match().replaceAll("\"\"", "\"")))), "\"", WS()),
+                Sequence("'", Sequence(ZeroOrMore(FirstOf(EscapeApos(), NoneOf("'"))), push(new StringLiteral(match().replaceAll("''", "'")))), "'", WS())
         );
     }
 
@@ -849,7 +821,7 @@ public class XPathParser extends BaseParser<Object> {
 
 
     /**
-     * [7] QName ::=    PrefixedName
+     * [7] QName ::=    PartialPrefixedName
      *                  | UnprefixedName
      */
     Rule XmlNames_QName() {
@@ -857,17 +829,17 @@ public class XPathParser extends BaseParser<Object> {
     }
 
     /**
-     * [8] PrefixedName ::= Prefix ':' LocalPart
+     * [8] PartialPrefixedName ::= Prefix ':' LocalPart
      */
     Rule XmlNames_PrefixedName() {
-        return Sequence(XmlNames_Prefix(), ':', XmlNames_LocalPart(), push(new QName(pop().toString(), pop().toString())));
+        return Sequence(XmlNames_Prefix(), push(new PartialPrefixedName(match())), ':', XmlNames_LocalPart(), push(complete(match(), pop())));
     }
 
     /**
      * [9] UnprefixedName ::= LocalPart
      */
     Rule XmlNames_UnprefixedName() {
-        return Sequence(XmlNames_LocalPart(), push(new QName(match())));
+        return Sequence(XmlNames_LocalPart(), push(new QNameW(match())));
     }
 
     /**
