@@ -31,6 +31,9 @@ import org.parboiled.support.ParsingResult;
 
 import javax.swing.text.AbstractDocument;
 
+import java.util.Arrays;
+import java.util.Collections;
+
 import static com.evolvedbinary.functional.Either.Right;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -218,6 +221,26 @@ public class XPathParserTest {
     public void parseVarRef() {
         assertEquals(new VarRef(new QNameW("a")), parse("$a", parser.VarRef()));
         assertEquals(new VarRef(new QNameW("ns", "a")), parse("$ns:a", parser.VarRef()));
+    }
+
+    @Test
+    public void parsePredicate() {
+        assertEquals(new Predicate(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)), parse("[1]", parser.Predicate()));
+        assertEquals(new Predicate(new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY)), parse("[$a]", parser.Predicate()));
+        assertEquals(new Predicate(new FilterExpr(new FunctionCall(new QNameW("true"), Collections.<AbstractASTNode>emptyList()), PredicateList.EMPTY)), parse("[true()]", parser.Predicate()));
+    }
+
+    @Test
+    public void parsePredicateList() {
+        assertEquals(new PredicateList(Arrays.asList(new Predicate(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)))), parse("[1]", parser.PredicateList()));
+        assertEquals(
+                new PredicateList(Arrays.asList(
+                        new Predicate(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)),
+                        new Predicate(new FilterExpr(new IntegerLiteral("2"), PredicateList.EMPTY)),
+                        new Predicate(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY))
+                )),
+                parse("[1][2][3]", parser.PredicateList())
+        );
     }
 
     private ASTNode parse(final String xpath) {

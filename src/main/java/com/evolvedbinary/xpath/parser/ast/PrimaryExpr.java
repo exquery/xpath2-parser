@@ -22,24 +22,5 @@ package com.evolvedbinary.xpath.parser.ast;
 /**
  * Created by aretter on 11/02/2016.
  */
-public class Predicate extends AbstractASTNode {
-    private final AbstractASTNode expr;
-
-    public Predicate(final AbstractASTNode expr) {
-        this.expr = expr;
-    }
-
-    @Override
-    protected String describe() {
-        return "Predicate(" + expr + ")";
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if(obj != null && obj instanceof Predicate) {
-            return ((Predicate)obj).expr.equals(expr);
-        }
-
-        return false;
-    }
+public abstract class PrimaryExpr extends AbstractASTNode {
 }

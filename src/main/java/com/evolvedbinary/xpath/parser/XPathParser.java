@@ -28,6 +28,11 @@ import org.parboiled.Rule;
 import org.parboiled.annotations.BuildParseTree;
 
 import com.evolvedbinary.xpath.parser.ast.*;
+import org.parboiled.support.Var;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 @BuildParseTree
 public class XPathParser extends BaseParser<AbstractASTNode> {
@@ -90,6 +95,36 @@ public class XPathParser extends BaseParser<AbstractASTNode> {
             partial = ((PartialASTNode)partial).complete(null);
         }
         return partial;
+    }
+
+    /**
+     * Pops all nodes from the value stack which are assignable
+     * from a specific class
+     *
+     * @param type The type of nodes to pop
+     * @return A list of the nodes in stack order
+     */
+    <T extends AbstractASTNode> List<T> popAll(final Class<T> type) {
+        final List<T> items = new ArrayList<T>();
+        while(!getContext().getValueStack().isEmpty() &&
+                peek().getClass().isAssignableFrom(type)) {
+            items.add((T)pop());
+        }
+
+        return items;
+    }
+
+    /**
+     * Similar to {@link #popAll(Class)} except that the
+     * order of nodes is reversed
+     *
+     * @param type The type of nodes to pop
+     * @return A list of the nodes in reverse stack order
+     */
+    <T extends AbstractASTNode> List<T> popAllR(final Class<T> type) {
+        final List<T> items = popAll(type);
+        Collections.reverse(items);
+        return items;
     }
 
     /**
@@ -455,14 +490,14 @@ public class XPathParser extends BaseParser<AbstractASTNode> {
      * [38] FilterExpr ::= PrimaryExpr PredicateList
      */
     Rule FilterExpr() {
-        return Sequence(PrimaryExpr(), PredicateList());
+        return Sequence(PrimaryExpr(), push(new PartialFilterExpr((PrimaryExpr)pop())), PredicateList(), push(complete(pop(), pop())));
     }
 
     /**
      * [39] PredicateList ::= Predicate*
      */
     Rule PredicateList() {
-        return ZeroOrMore(Predicate());
+        return Sequence(ZeroOrMore(Predicate()), push(new PredicateList(popAllR(Predicate.class))));
     }
 
     /**
@@ -471,12 +506,7 @@ public class XPathParser extends BaseParser<AbstractASTNode> {
     Rule Predicate() {
         return Sequence(
                 '[', WS(),
-                Expr(), new Action() {
-                    @Override
-                    public boolean run(Context context) {
-                        return true;
-                    }
-                },
+                Expr(), push(new Predicate(pop())),
                 ']', WS()
         );
     }

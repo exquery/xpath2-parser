@@ -17,29 +17,29 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-package com.evolvedbinary.xpath.parser.ast;
+package com.evolvedbinary.xpath.parser.ast.partial;
+
+import com.evolvedbinary.xpath.parser.ast.FilterExpr;
+import com.evolvedbinary.xpath.parser.ast.PredicateList;
+import com.evolvedbinary.xpath.parser.ast.PrimaryExpr;
 
 /**
  * Created by aretter on 11/02/2016.
  */
-public class Predicate extends AbstractASTNode {
-    private final AbstractASTNode expr;
+public class PartialFilterExpr extends AbstractPartialASTNode<FilterExpr, PredicateList> {
+    final PrimaryExpr primaryExpr;
 
-    public Predicate(final AbstractASTNode expr) {
-        this.expr = expr;
+    public PartialFilterExpr(final PrimaryExpr primaryExpr) {
+        this.primaryExpr = primaryExpr;
     }
 
     @Override
     protected String describe() {
-        return "Predicate(" + expr + ")";
+        return "FilterExpr(" + primaryExpr + ", ?)";
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if(obj != null && obj instanceof Predicate) {
-            return ((Predicate)obj).expr.equals(expr);
-        }
-
-        return false;
+    public FilterExpr complete(final PredicateList predicateList) {
+        return new FilterExpr(primaryExpr, predicateList);
     }
 }

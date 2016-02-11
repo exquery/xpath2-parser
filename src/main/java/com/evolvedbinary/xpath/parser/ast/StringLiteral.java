@@ -22,7 +22,7 @@ package com.evolvedbinary.xpath.parser.ast;
 /**
  * Created by aretter on 31/01/2016.
  */
-public class StringLiteral extends AbstractASTNode {
+public class StringLiteral extends Literal {
     private final String value;
 
     public StringLiteral(final String value) {
