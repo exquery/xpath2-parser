@@ -142,47 +142,47 @@ public class XPathParserTest {
 
     @Test
     public void parseFowardAxis() {
-        assertEquals(Axis.CHILD, parse("child::", parser.ForwardAxis()));
-        assertEquals(Axis.DESCENDANT, parse("descendant::", parser.ForwardAxis()));
-        assertEquals(Axis.ATTRIBUTE, parse("attribute::", parser.ForwardAxis()));
-        assertEquals(Axis.SELF, parse("self::*", parser.ForwardAxis()));
-        assertEquals(Axis.DESCENDANT_OR_SELF, parse("descendant-or-self::", parser.ForwardAxis()));
-        assertEquals(Axis.FOLLOWING_SIBLING, parse("following-sibling::", parser.ForwardAxis()));
-        assertEquals(Axis.FOLLOWING, parse("following::", parser.ForwardAxis()));
-        assertEquals(Axis.NAMESPACE, parse("namespace::", parser.ForwardAxis()));
+        assertEquals(new Axis(Axis.Direction.CHILD), parse("child::", parser.ForwardAxis()));
+        assertEquals(new Axis(Axis.Direction.DESCENDANT), parse("descendant::", parser.ForwardAxis()));
+        assertEquals(new Axis(Axis.Direction.ATTRIBUTE), parse("attribute::", parser.ForwardAxis()));
+        assertEquals(new Axis(Axis.Direction.SELF), parse("self::*", parser.ForwardAxis()));
+        assertEquals(new Axis(Axis.Direction.DESCENDANT_OR_SELF), parse("descendant-or-self::", parser.ForwardAxis()));
+        assertEquals(new Axis(Axis.Direction.FOLLOWING_SIBLING), parse("following-sibling::", parser.ForwardAxis()));
+        assertEquals(new Axis(Axis.Direction.FOLLOWING), parse("following::", parser.ForwardAxis()));
+        assertEquals(new Axis(Axis.Direction.NAMESPACE), parse("namespace::", parser.ForwardAxis()));
     }
 
     @Test
     public void parseAbbrevForwardStep() {
-        assertEquals(new Step(Axis.CHILD, new ElementTest()), parse("element()", parser.AbbrevForwardStep()));
-        assertEquals(new Step(Axis.ATTRIBUTE, WILDCARD), parse("@*", parser.AbbrevForwardStep()));
+        assertEquals(new Step(new Axis(Axis.Direction.CHILD), new ElementTest()), parse("element()", parser.AbbrevForwardStep()));
+        assertEquals(new Step(new Axis(Axis.Direction.ATTRIBUTE), WILDCARD), parse("@*", parser.AbbrevForwardStep()));
     }
 
     @Test
     public void parseForwardStep() {
-        assertEquals(new Step(Axis.CHILD, WILDCARD), parse("child::*", parser.ForwardStep()));
-        assertEquals(new Step(Axis.CHILD, new ElementTest()), parse("element()", parser.AbbrevForwardStep()));
-        assertEquals(new Step(Axis.ATTRIBUTE, WILDCARD), parse("@*", parser.ForwardStep()));
+        assertEquals(new Step(new Axis(Axis.Direction.CHILD), WILDCARD), parse("child::*", parser.ForwardStep()));
+        assertEquals(new Step(new Axis(Axis.Direction.CHILD), new ElementTest()), parse("element()", parser.AbbrevForwardStep()));
+        assertEquals(new Step(new Axis(Axis.Direction.ATTRIBUTE), WILDCARD), parse("@*", parser.ForwardStep()));
     }
 
     @Test
     public void parseReverseAxis() {
-        assertEquals(Axis.PARENT, parse("parent::", parser.ReverseAxis()));
-        assertEquals(Axis.ANCESTOR_OR_SELF, parse("ancestor-or-self::", parser.ReverseAxis()));
-        assertEquals(Axis.ANCESTOR, parse("ancestor::", parser.ReverseAxis()));
-        assertEquals(Axis.PRECEDING_SIBLING, parse("preceding-sibling::", parser.ReverseAxis()));
-        assertEquals(Axis.PRECEDING, parse("preceding::", parser.ReverseAxis()));
+        assertEquals(new Axis(Axis.Direction.PARENT), parse("parent::", parser.ReverseAxis()));
+        assertEquals(new Axis(Axis.Direction.ANCESTOR_OR_SELF), parse("ancestor-or-self::", parser.ReverseAxis()));
+        assertEquals(new Axis(Axis.Direction.ANCESTOR), parse("ancestor::", parser.ReverseAxis()));
+        assertEquals(new Axis(Axis.Direction.PRECEDING_SIBLING), parse("preceding-sibling::", parser.ReverseAxis()));
+        assertEquals(new Axis(Axis.Direction.PRECEDING), parse("preceding::", parser.ReverseAxis()));
     }
 
     @Test
     public void parseAbbrevReverseStep() {
-        assertEquals(new Step(Axis.PARENT, new AnyKindTest()), parse("..", parser.AbbrevReverseStep()));
+        assertEquals(new Step(new Axis(Axis.Direction.PARENT), new AnyKindTest()), parse("..", parser.AbbrevReverseStep()));
     }
 
     @Test
     public void parseReverseStep() {
-        assertEquals(new Step(Axis.PARENT, WILDCARD), parse("parent::*", parser.ReverseStep()));
-        assertEquals(new Step(Axis.PARENT, new AnyKindTest()), parse("..", parser.ReverseStep()));
+        assertEquals(new Step(new Axis(Axis.Direction.PARENT), WILDCARD), parse("parent::*", parser.ReverseStep()));
+        assertEquals(new Step(new Axis(Axis.Direction.PARENT), new AnyKindTest()), parse("..", parser.ReverseStep()));
     }
 
     @Test

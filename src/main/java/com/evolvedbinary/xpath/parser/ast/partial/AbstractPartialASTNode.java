@@ -26,7 +26,7 @@ import com.evolvedbinary.xpath.parser.ast.AbstractASTNode;
  * @param <T> The type of the ASTNode which is to be completed
  * @param <U> The type of the value to use to complete the partial AST node
  */
-public abstract class AbstractPartialASTNode<T extends ASTNode, U> extends AbstractASTNode implements PartialASTNode<T, U> {
+public abstract class AbstractPartialASTNode<T extends AbstractASTNode, U> extends AbstractASTNode implements PartialASTNode<T, U> {
 
     @Override
     public String toString() {

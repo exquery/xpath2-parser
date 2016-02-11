@@ -40,7 +40,7 @@ public class Step extends AbstractASTNode {
     public boolean equals(final Object obj) {
         if(obj != null && obj instanceof Step) {
             final Step other = (Step)obj;
-            return other.axis == this.axis &&
+            return other.axis.equals(this.axis) &&
                     other.nodeTest.equals(this.nodeTest);
         }
 

@@ -20,11 +20,12 @@
 package com.evolvedbinary.xpath.parser.ast.partial;
 
 import com.evolvedbinary.xpath.parser.ast.ASTNode;
+import com.evolvedbinary.xpath.parser.ast.AbstractASTNode;
 
 /**
  * @param <T> The type of the ASTNode which is to be completed
  * @param <U> The type of the value to use to complete the partial AST node
  */
-public interface PartialASTNode<T extends ASTNode, U> extends ASTNode {
+public interface PartialASTNode<T extends AbstractASTNode, U> extends ASTNode {
     abstract T complete(U completeWith);
 }

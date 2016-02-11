@@ -30,7 +30,7 @@ import org.parboiled.annotations.BuildParseTree;
 import com.evolvedbinary.xpath.parser.ast.*;
 
 @BuildParseTree
-public class XPathParser extends BaseParser<ASTNode> {
+public class XPathParser extends BaseParser<AbstractASTNode> {
 
     private final boolean enableActions;
 
@@ -40,7 +40,7 @@ public class XPathParser extends BaseParser<ASTNode> {
 
     //TODO(AR) remove!
     @Override
-    public boolean push(ASTNode value) {
+    public boolean push(AbstractASTNode value) {
         if(enableActions) {
             return super.push(value);
         } else {
@@ -49,7 +49,7 @@ public class XPathParser extends BaseParser<ASTNode> {
     }
 
     @Override
-    public ASTNode pop() {
+    public AbstractASTNode pop() {
         if(enableActions) {
             return super.pop();
         } else {
@@ -58,7 +58,7 @@ public class XPathParser extends BaseParser<ASTNode> {
     }
 
     @Override
-    public ASTNode peek() {
+    public AbstractASTNode peek() {
         if(enableActions) {
             return super.peek();
         } else {
@@ -78,14 +78,14 @@ public class XPathParser extends BaseParser<ASTNode> {
         //getContext().getValueStack().peek()
     }
 
-    <T> ASTNode complete(final T value, final ASTNode partial) {
+    <T> AbstractASTNode complete(final T value, final AbstractASTNode partial) {
         if(!(partial instanceof PartialASTNode)) {
             throw new IllegalStateException("Cannot complete non-partial AST Node: " + partial.getClass());
         }
         return ((PartialASTNode<?, T>)partial).complete(value);
     }
 
-    ASTNode completeOptional(ASTNode partial) {
+    AbstractASTNode completeOptional(AbstractASTNode partial) {
         while(partial instanceof PartialASTNode) {
             partial = ((PartialASTNode)partial).complete(null);
         }
@@ -382,8 +382,8 @@ public class XPathParser extends BaseParser<ASTNode> {
      */
     Rule AbbrevForwardStep() {
         return FirstOf(
-                Sequence('@', WS(), NodeTest(), push(new Step(Axis.ATTRIBUTE, (NodeTest)pop()))),
-                Sequence(NodeTest(), push(new Step(Axis.CHILD, (NodeTest)pop())))
+                Sequence('@', WS(), NodeTest(), push(new Step(new Axis(Axis.Direction.ATTRIBUTE), (NodeTest)pop()))),
+                Sequence(NodeTest(), push(new Step(new Axis(Axis.Direction.CHILD), (NodeTest)pop())))
         );
     }
 
@@ -421,7 +421,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      * [34] AbbrevReverseStep ::= ".."
      */
     Rule AbbrevReverseStep() {
-        return Sequence("..", push(new Step(Axis.PARENT, new AnyKindTest())), WS());
+        return Sequence("..", push(new Step(new Axis(Axis.Direction.PARENT), new AnyKindTest())), WS());
     }
 
     /**

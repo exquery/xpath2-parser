@@ -22,36 +22,62 @@ package com.evolvedbinary.xpath.parser.ast;
 /**
  * Created by aretter on 28/01/2016.
  */
-public enum Axis implements ASTNode {
-    CHILD("child"),
-    PARENT("parent"),
-    PRECEDING_SIBLING("preceding-sibling"),
-    PRECEDING("preceding"),
-    ANCESTOR_OR_SELF("ancestor-or-self"),
-    ANCESTOR("ancestor"),
-    SELF("self"),
-    DESCENDANT_OR_SELF("descendant-or-self"),
-    DESCENDANT("descendant"),
-    FOLLOWING_SIBLING("following-sibling"),
-    FOLLOWING("following"),
-    NAMESPACE("namespace"),
-    ATTRIBUTE("attribute");
+public class Axis extends AbstractASTNode {
+    public enum Direction {
+        CHILD("child"),
+        PARENT("parent"),
+        PRECEDING_SIBLING("preceding-sibling"),
+        PRECEDING("preceding"),
+        ANCESTOR_OR_SELF("ancestor-or-self"),
+        ANCESTOR("ancestor"),
+        SELF("self"),
+        DESCENDANT_OR_SELF("descendant-or-self"),
+        DESCENDANT("descendant"),
+        FOLLOWING_SIBLING("following-sibling"),
+        FOLLOWING("following"),
+        NAMESPACE("namespace"),
+        ATTRIBUTE("attribute");
 
-    final String syntax;
-    Axis(final String syntax) {
-        this.syntax = syntax;
+        final String syntax;
+        Direction(final String syntax) {
+            this.syntax = syntax;
+        }
+    }
+
+    private final Direction direction;
+
+    public Axis(final Direction direction) {
+        this.direction = direction;
     }
 
     public final static Axis fromSyntax(final String syntax) {
-        for(final Axis step: values()) {
-            if(step.syntax.equals(syntax)) {
-                return step;
+        for(final Direction direction: Direction.values()) {
+            if(direction.syntax.equals(syntax)) {
+                return new Axis(direction);
             }
         }
         throw new IllegalArgumentException("No such axis: '" + syntax + "'");
     }
 
+    public String getName() {
+        return direction.name();
+    }
+
     public String getSyntax() {
-        return syntax;
+        return direction.syntax;
+    }
+
+    @Override
+    protected String describe() {
+        return "Axis(" + getSyntax() + ")";
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if(obj != null && obj instanceof Axis) {
+            return ((Axis)obj).direction == direction;
+        }
+
+        return false;
     }
 }

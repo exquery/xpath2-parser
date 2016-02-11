@@ -46,9 +46,9 @@ public class AxisStep extends AbstractASTNode {
     @Override
     public final String describe() {
         if(test != null) {
-            return "AxisStep(" + step.name() + ", " + test + ")";
+            return "AxisStep(" + step.getName() + ", " + test + ")";
         } else {
-            return "AxisStep(" + step.name() + ")";
+            return "AxisStep(" + step.getName() + ")";
         }
     }
 }
