@@ -252,6 +252,11 @@ public class XPathParserTest {
         assertEquals(new FunctionCall(new QNameW("other"), Arrays.<AbstractASTNode>asList(new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY))), parse("other($a)", parser.FunctionCall()));
     }
 
+    @Test
+    public void parseContextItemExpr() {
+        assertEquals(ContextItemExpr.instance(), parse(".", parser.ContextItemExpr()));
+    }
+
     private ASTNode parse(final String xpath) {
         return parse(xpath, parser.XPath());
     }

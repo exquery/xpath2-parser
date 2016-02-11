@@ -567,7 +567,7 @@ public class XPathParser extends BaseParser<AbstractASTNode> {
      * [47] ContextItemExpr ::= "."
      */
     Rule ContextItemExpr() {
-        return Sequence('.', WS());
+        return Sequence('.', push(ContextItemExpr.instance()), WS());
     }
 
     /**
