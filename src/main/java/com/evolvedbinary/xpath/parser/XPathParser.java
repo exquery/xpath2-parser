@@ -286,31 +286,40 @@ public class XPathParser extends BaseParser<AbstractASTNode> {
 
     /**
      * [18] CastableExpr ::= CastExpr ( "castable" "as" SingleType )?
+     *
+     * Value stack head either: CastableExpr / CastExpr / UnaryExpr / ValueExpr
      */
     Rule CastableExpr() {
-        return Sequence(CastExpr(), Optional(Sequence("castable", WS(), "as", WS(), SingleType())));
+        return Sequence(CastExpr(), Optional(Sequence("castable", WS(), "as", WS(), SingleType(), push(new CastableExpr((AbstractOperand)pop(1), (SingleType)pop())))));
     }
 
     /**
      * [19] CastExpr ::= UnaryExpr ( "cast" "as" SingleType )?
+     *
+     * Value stack head either: CastExpr / UnaryExpr / ValueExpr
      */
     Rule CastExpr() {
-        return Sequence(UnaryExpr(), Optional(Sequence("cast", WS(), "as", WS(), SingleType())));
-
+        return Sequence(UnaryExpr(), Optional(Sequence("cast", WS(), "as", WS(), SingleType(), push(new CastExpr((AbstractOperand)pop(1), (SingleType)pop())))));
     }
 
     /**
      * [20] UnaryExpr ::= ("-" | "+")* ValueExpr
+     *
+     * Value stack head either: UnaryExpr / ValueExpr
      */
     Rule UnaryExpr() {
-        return Sequence(ZeroOrMore('-', '+'), WS(), ValueExpr());
+        return FirstOf(
+                Sequence(OneOrMore(FirstOf('-', '+')), push(new PartialUnaryExpr(match())), ValueExpr(), push(complete(pop(), pop()))),
+                ValueExpr()
+        );
+        //return Sequence(ZeroOrMore('-', '+'), WS(), ValueExpr());
     }
 
     /**
      * [21] ValueExpr ::= PathExpr
      */
     Rule ValueExpr() {
-        return PathExpr();
+        return Sequence(PathExpr(), push(new ValueExpr(pop())));
     }
 
     /**
@@ -591,7 +600,10 @@ public class XPathParser extends BaseParser<AbstractASTNode> {
      * [49] SingleType ::= AtomicType "?"?      //gn: parens
      */
     Rule SingleType() {
-        return Sequence(AtomicType(), Optional(Sequence('?', WS())));
+        return FirstOf(
+                Sequence(AtomicType(), WS(), '?', push(new SingleType((AtomicType)pop(), true)), WS()),
+                Sequence(AtomicType(), push(new SingleType((AtomicType)pop(), false)))
+        );
     }
 
     /**
@@ -613,14 +625,18 @@ public class XPathParser extends BaseParser<AbstractASTNode> {
      * [52] ItemType ::= KindTest | ("item" "(" ")") | AtomicType
      */
     Rule ItemType() {
-        return FirstOf(KindTest(), Sequence("item", WS(), '(', WS(), ')', WS()), AtomicType());
+        return FirstOf(
+                KindTest(),
+                Sequence("item", WS(), '(', WS(), ')', WS()),
+                AtomicType()
+        );
     }
 
     /**
      * [53] AtomicType ::= QName
      */
     Rule AtomicType() {
-        return QName();
+        return Sequence(QName(), push(new AtomicType((QNameW)pop())));
     }
 
     /**

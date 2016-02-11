@@ -41,6 +41,10 @@ public class XPathParserTest {
 
     private final static NameTest WILDCARD = new NameTest(new QNameW(QNameW.WILDCARD));
 
+    private final static AtomicType XS_INT = new AtomicType(new QNameW("xs", "int"));
+    private final static AtomicType XS_INTEGER = new AtomicType(new QNameW("xs", "integer"));
+    private final static AtomicType XS_STRING = new AtomicType(new QNameW("xs", "string"));
+
     final boolean DEBUG = true;
     final XPathParser parser = Parboiled.createParser(XPathParser.class, Boolean.TRUE);
 
@@ -222,19 +226,19 @@ public class XPathParserTest {
 
     @Test
     public void parsePredicate() {
-        assertEquals(new Predicate(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)), parse("[1]", parser.Predicate()));
-        assertEquals(new Predicate(new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY)), parse("[$a]", parser.Predicate()));
-        assertEquals(new Predicate(new FilterExpr(new FunctionCall(new QNameW("true"), Collections.<AbstractASTNode>emptyList()), PredicateList.EMPTY)), parse("[true()]", parser.Predicate()));
+        assertEquals(new Predicate(new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))), parse("[1]", parser.Predicate()));
+        assertEquals(new Predicate(new ValueExpr(new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY))), parse("[$a]", parser.Predicate()));
+        assertEquals(new Predicate(new ValueExpr(new FilterExpr(new FunctionCall(new QNameW("true"), Collections.<AbstractASTNode>emptyList()), PredicateList.EMPTY))), parse("[true()]", parser.Predicate()));
     }
 
     @Test
     public void parsePredicateList() {
-        assertEquals(new PredicateList(Arrays.asList(new Predicate(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)))), parse("[1]", parser.PredicateList()));
+        assertEquals(new PredicateList(Arrays.asList(new Predicate(new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))))), parse("[1]", parser.PredicateList()));
         assertEquals(
                 new PredicateList(Arrays.asList(
-                        new Predicate(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)),
-                        new Predicate(new FilterExpr(new IntegerLiteral("2"), PredicateList.EMPTY)),
-                        new Predicate(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY))
+                        new Predicate(new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))),
+                        new Predicate(new ValueExpr(new FilterExpr(new IntegerLiteral("2"), PredicateList.EMPTY))),
+                        new Predicate(new ValueExpr(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY)))
                 )),
                 parse("[1][2][3]", parser.PredicateList())
         );
@@ -244,9 +248,9 @@ public class XPathParserTest {
     public void parseFunctionCall() {
         assertEquals(new FunctionCall(new QNameW("true"), Collections.<AbstractASTNode>emptyList()), parse("true()", parser.FunctionCall()));
         assertEquals(new FunctionCall(new QNameW("false"), Collections.<AbstractASTNode>emptyList()), parse("false()", parser.FunctionCall()));
-        assertEquals(new FunctionCall(new QNameW("local", "hello"), Arrays.<AbstractASTNode>asList(new FilterExpr(new StringLiteral("world"), PredicateList.EMPTY))), parse("local:hello(\"world\")", parser.FunctionCall()));
-        assertEquals(new FunctionCall(new QNameW("local", "hello"), Arrays.<AbstractASTNode>asList(new FilterExpr(new StringLiteral("world"), PredicateList.EMPTY), new FilterExpr(new StringLiteral("again"), PredicateList.EMPTY))), parse("local:hello(\"world\", \"again\")", parser.FunctionCall()));
-        assertEquals(new FunctionCall(new QNameW("other"), Arrays.<AbstractASTNode>asList(new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY))), parse("other($a)", parser.FunctionCall()));
+        assertEquals(new FunctionCall(new QNameW("local", "hello"), Arrays.<AbstractASTNode>asList(new ValueExpr(new FilterExpr(new StringLiteral("world"), PredicateList.EMPTY)))), parse("local:hello(\"world\")", parser.FunctionCall()));
+        assertEquals(new FunctionCall(new QNameW("local", "hello"), Arrays.<AbstractASTNode>asList(new ValueExpr(new FilterExpr(new StringLiteral("world"), PredicateList.EMPTY)), new ValueExpr(new FilterExpr(new StringLiteral("again"), PredicateList.EMPTY)))), parse("local:hello(\"world\", \"again\")", parser.FunctionCall()));
+        assertEquals(new FunctionCall(new QNameW("other"), Arrays.<AbstractASTNode>asList(new ValueExpr(new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY)))), parse("other($a)", parser.FunctionCall()));
     }
 
     @Test
@@ -261,9 +265,9 @@ public class XPathParserTest {
                 new FilterExpr(
                         ContextItemExpr.instance(),
                         new PredicateList(Arrays.asList(
-                                new Predicate(new AxisStep(
+                                new Predicate(new ValueExpr(new AxisStep(
                                         new Step(new Axis(Axis.Direction.CHILD), new NameTest(new QNameW("a"))),
-                                        PredicateList.EMPTY)
+                                        PredicateList.EMPTY))
                                 )
                         ))
                 ),
@@ -279,9 +283,9 @@ public class XPathParserTest {
                 new AxisStep(
                         new Step(new Axis(Axis.Direction.CHILD), new NameTest(new QNameW("a"))),
                         new PredicateList(Arrays.asList(
-                                new Predicate(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)),
-                                new Predicate(new FilterExpr(new IntegerLiteral("2"), PredicateList.EMPTY)),
-                                new Predicate(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY))))
+                                new Predicate(new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))),
+                                new Predicate(new ValueExpr(new FilterExpr(new IntegerLiteral("2"), PredicateList.EMPTY))),
+                                new Predicate(new ValueExpr(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY)))))
                 ),
                 parse("a[1][2][3]", parser.AxisStep())
         );
@@ -290,13 +294,50 @@ public class XPathParserTest {
                 new AxisStep(
                         new Step(new Axis(Axis.Direction.CHILD), new NameTest(new QNameW("a"))),
                         new PredicateList(Arrays.asList(
-                                new Predicate(new FilterExpr(new FunctionCall(new QNameW("true"), Collections.<AbstractASTNode>emptyList()), PredicateList.EMPTY)),
-                                new Predicate(new FilterExpr(new FunctionCall(new QNameW("false"), Collections.<AbstractASTNode>emptyList()), PredicateList.EMPTY))))
+                                new Predicate(new ValueExpr(new FilterExpr(new FunctionCall(new QNameW("true"), Collections.<AbstractASTNode>emptyList()), PredicateList.EMPTY))),
+                                new Predicate(new ValueExpr(new FilterExpr(new FunctionCall(new QNameW("false"), Collections.<AbstractASTNode>emptyList()), PredicateList.EMPTY)))))
                 ),
                 parse("a[true()][false()]", parser.AxisStep())
         );
     }
 
+    @Test
+    public void parseUnaryExpr() {
+        assertEquals(new UnaryExpr("+-", new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))), parse("+-1", parser.UnaryExpr()));
+        assertEquals(new UnaryExpr("--", new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))), parse("--1", parser.UnaryExpr()));
+        assertEquals(new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)), parse("1", parser.UnaryExpr()));
+    }
+
+    @Test
+    public void parseAtomicType() {
+        assertEquals(XS_STRING, parse("xs:string", parser.AtomicType()));
+        assertEquals(XS_INTEGER, parse("xs:integer", parser.AtomicType()));
+    }
+
+    @Test
+    public void parseSingleType() {
+        assertEquals(new SingleType(XS_STRING, false), parse("xs:string", parser.SingleType()));
+        assertEquals(new SingleType(XS_STRING, true), parse("xs:string?", parser.SingleType()));
+    }
+
+    @Test
+    public void parseCastExpr() {
+        assertEquals(new CastExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, false)), parse("-123 cast as xs:int", parser.CastExpr()));
+        assertEquals(new CastExpr(new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)), new SingleType(XS_INT, false)), parse("123 cast as xs:int", parser.CastExpr()));
+        assertEquals(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), parse("-123", parser.CastExpr()));
+        assertEquals(new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)), parse("123", parser.CastExpr()));
+    }
+
+    @Test
+    public void parseCastableExpr() {
+        assertEquals(new CastableExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, false)), new SingleType(XS_INTEGER, false)), parse("-123 cast as xs:int castable as xs:integer", parser.CastableExpr()));
+        assertEquals(new CastableExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, true)), parse("-123 castable as xs:int?", parser.CastableExpr()));
+        assertEquals(new CastableExpr(new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)), new SingleType(XS_STRING, false)), parse("123 castable as xs:string", parser.CastableExpr()));
+        assertEquals(new CastExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, false)), parse("-123 cast as xs:int", parser.CastableExpr()));
+        assertEquals(new CastExpr(new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)), new SingleType(XS_INT, false)), parse("123 cast as xs:int", parser.CastableExpr()));
+        assertEquals(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), parse("-123", parser.CastableExpr()));
+        assertEquals(new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)), parse("123", parser.CastableExpr()));
+    }
 
     private ASTNode parse(final String xpath) {
         return parse(xpath, parser.XPath());
