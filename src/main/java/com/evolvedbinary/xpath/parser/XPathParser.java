@@ -574,8 +574,16 @@ public class XPathParser extends BaseParser<AbstractASTNode> {
      * [48] FunctionCall ::= QName "(" (ExprSingle ("," ExprSingle)*)? ")"      //xgs:reserved-function-names
      */
     Rule FunctionCall() {
+        //final Var<List<ExprSingle>> arguments = new Var<List<ExprSingle>>(new ArrayList<ExprSingle>());
+        //TODO(AR) should be ExprSingle?
+        final Var<List<AbstractASTNode>> arguments = new Var<List<AbstractASTNode>>(new ArrayList<AbstractASTNode>());
+
+        //TODO(AR) we need to actually extract the arguments from the parser and add them to the list
+
         return Sequence(
-               QName(), '(', WS(), Optional(Sequence(ExprSingle(), ZeroOrMore(Sequence(',', WS(), ExprSingle())))), ')', WS()
+               QName(), push(new PartialFunctionCall((QNameW)pop())),
+                '(', WS(), Optional(Sequence(ExprSingle(), ACTION(arguments.get().add(pop())), ZeroOrMore(Sequence(',', WS(), ExprSingle(), ACTION(arguments.get().add(pop())))))), ')', WS(),
+                push(complete(arguments.get(), pop()))
         );
     }
 

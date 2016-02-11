@@ -243,6 +243,15 @@ public class XPathParserTest {
         );
     }
 
+    @Test
+    public void parseFunctionCall() {
+        assertEquals(new FunctionCall(new QNameW("true"), Collections.<AbstractASTNode>emptyList()), parse("true()", parser.FunctionCall()));
+        assertEquals(new FunctionCall(new QNameW("false"), Collections.<AbstractASTNode>emptyList()), parse("false()", parser.FunctionCall()));
+        assertEquals(new FunctionCall(new QNameW("local", "hello"), Arrays.<AbstractASTNode>asList(new FilterExpr(new StringLiteral("world"), PredicateList.EMPTY))), parse("local:hello(\"world\")", parser.FunctionCall()));
+        assertEquals(new FunctionCall(new QNameW("local", "hello"), Arrays.<AbstractASTNode>asList(new FilterExpr(new StringLiteral("world"), PredicateList.EMPTY), new FilterExpr(new StringLiteral("again"), PredicateList.EMPTY))), parse("local:hello(\"world\", \"again\")", parser.FunctionCall()));
+        assertEquals(new FunctionCall(new QNameW("other"), Arrays.<AbstractASTNode>asList(new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY))), parse("other($a)", parser.FunctionCall()));
+    }
+
     private ASTNode parse(final String xpath) {
         return parse(xpath, parser.XPath());
     }
