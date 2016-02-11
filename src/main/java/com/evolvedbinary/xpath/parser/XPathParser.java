@@ -373,7 +373,7 @@ public class XPathParser extends BaseParser<AbstractASTNode> {
      * [28] AxisStep ::= (ReverseStep | ForwardStep) PredicateList
      */
     Rule AxisStep() {
-        return Sequence(FirstOf(ReverseStep(), ForwardStep()), PredicateList());
+        return Sequence(FirstOf(ReverseStep(), ForwardStep()), push(new PartialAxisStep((Step)pop())), PredicateList(), push(complete(pop(), pop())));
     }
 
     /**

@@ -29,12 +29,9 @@ import org.parboiled.parserunners.RecoveringParseRunner;
 import org.parboiled.support.ParseTreeUtils;
 import org.parboiled.support.ParsingResult;
 
-import javax.swing.text.AbstractDocument;
-
 import java.util.Arrays;
 import java.util.Collections;
 
-import static com.evolvedbinary.functional.Either.Right;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.fail;
@@ -256,6 +253,50 @@ public class XPathParserTest {
     public void parseContextItemExpr() {
         assertEquals(ContextItemExpr.instance(), parse(".", parser.ContextItemExpr()));
     }
+
+    @Test
+    public void parseFilterExpr() {
+        assertEquals(new FilterExpr(ContextItemExpr.instance(), PredicateList.EMPTY), parse(".", parser.FilterExpr()));
+        assertEquals(
+                new FilterExpr(
+                        ContextItemExpr.instance(),
+                        new PredicateList(Arrays.asList(
+                                new Predicate(new AxisStep(
+                                        new Step(new Axis(Axis.Direction.CHILD), new NameTest(new QNameW("a"))),
+                                        PredicateList.EMPTY)
+                                )
+                        ))
+                ),
+                parse(".[a]", parser.FilterExpr())
+        );
+
+        //TODO(AR) most likely more tests needed here
+    }
+
+    @Test
+    public void parseAxisStep() {
+        assertEquals(
+                new AxisStep(
+                        new Step(new Axis(Axis.Direction.CHILD), new NameTest(new QNameW("a"))),
+                        new PredicateList(Arrays.asList(
+                                new Predicate(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)),
+                                new Predicate(new FilterExpr(new IntegerLiteral("2"), PredicateList.EMPTY)),
+                                new Predicate(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY))))
+                ),
+                parse("a[1][2][3]", parser.AxisStep())
+        );
+
+        assertEquals(
+                new AxisStep(
+                        new Step(new Axis(Axis.Direction.CHILD), new NameTest(new QNameW("a"))),
+                        new PredicateList(Arrays.asList(
+                                new Predicate(new FilterExpr(new FunctionCall(new QNameW("true"), Collections.<AbstractASTNode>emptyList()), PredicateList.EMPTY)),
+                                new Predicate(new FilterExpr(new FunctionCall(new QNameW("false"), Collections.<AbstractASTNode>emptyList()), PredicateList.EMPTY))))
+                ),
+                parse("a[true()][false()]", parser.AxisStep())
+        );
+    }
+
 
     private ASTNode parse(final String xpath) {
         return parse(xpath, parser.XPath());

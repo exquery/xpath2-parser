@@ -17,33 +17,29 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-package com.evolvedbinary.xpath.parser.ast;
+package com.evolvedbinary.xpath.parser.ast.partial;
+
+import com.evolvedbinary.xpath.parser.ast.AxisStep;
+import com.evolvedbinary.xpath.parser.ast.PredicateList;
+import com.evolvedbinary.xpath.parser.ast.Step;
 
 /**
- * Created by aretter on 28/01/2016.
+ * Created by aretter on 11/02/2016.
  */
-public class AxisStep extends AbstractASTNode {
-    private Step step;
-    private PredicateList predicateList;
+public class PartialAxisStep extends AbstractPartialASTNode<AxisStep, PredicateList> {
+    private final Step step;
 
-    public AxisStep(final Step step, final PredicateList predicateList) {
+    public PartialAxisStep(final Step step) {
         this.step = step;
-        this.predicateList = predicateList;
     }
 
     @Override
-    public final String describe() {
-        return "AxisStep(" + step + ", " + predicateList + ")";
+    protected String describe() {
+        return "AxisStep(" + step + ", ?)";
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if(obj != null && obj instanceof AxisStep) {
-            final AxisStep other = (AxisStep)obj;
-            return other.step.equals(step)
-                    && other.predicateList.equals(predicateList);
-        }
-
-        return false;
+    public AxisStep complete(final PredicateList predicateList) {
+        return new AxisStep(step, predicateList);
     }
 }
