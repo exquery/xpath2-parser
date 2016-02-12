@@ -20,16 +20,30 @@
 package com.evolvedbinary.xpath.parser.ast;
 
 /**
- * Created by aretter on 31/01/2016.
+ * Created by aretter on 11/02/2016.
  */
-public class AnyKindTest extends KindTest {
-    private final static AnyKindTest instance = new AnyKindTest();
+public class InstanceOfExpr extends AbstractOperand {
+    private final AbstractOperand operand;
+    private final SequenceType type;
 
-    private AnyKindTest() {
-        super(Kind.ANY);
+    public InstanceOfExpr(final AbstractOperand operand, final SequenceType type) {
+        this.operand = operand;
+        this.type = type;
     }
 
-    public final static AnyKindTest instance() {
-        return instance;
+    @Override
+    protected String describe() {
+        return "InstanceOf(" + operand + " instance of " + type + ")";
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if(obj != null && obj instanceof InstanceOfExpr) {
+            final InstanceOfExpr other = (InstanceOfExpr)obj;
+            return other.operand.equals(operand)
+                    && other.type.equals(type);
+        }
+
+        return false;
     }
 }

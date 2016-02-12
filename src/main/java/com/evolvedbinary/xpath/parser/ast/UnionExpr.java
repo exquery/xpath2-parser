@@ -19,26 +19,37 @@
  */
 package com.evolvedbinary.xpath.parser.ast;
 
+import java.util.List;
+
 /**
- * Created by aretter on 11/02/2016.
+ * Created by aretter on 12/02/2016.
  */
-public class AtomicType extends PrimaryExpr implements ItemType {
+public class UnionExpr extends AbstractOperand {
+    private final AbstractOperand operand;
+    private final List<AbstractOperand> unionOps;
 
-    private final QNameW typeName;
-
-    public AtomicType(final QNameW varName) {
-        this.typeName = varName;
+    public UnionExpr(final AbstractOperand operand, final List<AbstractOperand> unionOps) {
+        this.operand = operand;
+        this.unionOps = unionOps;
     }
 
     @Override
     protected String describe() {
-        return "AtomicType(" + typeName + ")";
+        final StringBuilder builder = new StringBuilder();
+        for(final AbstractOperand unionOp : unionOps) {
+            builder
+                    .append(" union ")
+                    .append(unionOp);
+        }
+        return "UnionExpr(" + operand + builder.toString() + ")";
     }
 
     @Override
     public boolean equals(final Object obj) {
-        if(obj != null && obj instanceof AtomicType) {
-            return ((AtomicType)obj).typeName.equals(typeName);
+        if(obj != null && obj instanceof UnionExpr) {
+            final UnionExpr other = (UnionExpr)obj;
+            return other.operand.equals(operand)
+                    && other.unionOps.equals(unionOps);
         }
 
         return false;

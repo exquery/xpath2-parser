@@ -17,19 +17,31 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-package com.evolvedbinary.xpath.parser.ast;
+package com.evolvedbinary.xpath.parser.ast.partial;
+
+import com.evolvedbinary.xpath.parser.ast.AbstractOperand;
+import com.evolvedbinary.xpath.parser.ast.UnionExpr;
+
+import java.util.List;
 
 /**
- * Created by aretter on 31/01/2016.
+ * Created by aretter on 12/02/2016.
  */
-public class AnyKindTest extends KindTest {
-    private final static AnyKindTest instance = new AnyKindTest();
+public class PartialUnionExpr extends AbstractPartialASTNode<UnionExpr, List<AbstractOperand>> {
+    private final AbstractOperand operand;
 
-    private AnyKindTest() {
-        super(Kind.ANY);
+    public PartialUnionExpr(final AbstractOperand operand) {
+        this.operand = operand;
     }
 
-    public final static AnyKindTest instance() {
-        return instance;
+
+    @Override
+    protected String describe() {
+        return "UnionExpr(" + operand + "?...)";
+    }
+
+    @Override
+    public UnionExpr complete(final List<AbstractOperand> unionOps) {
+        return new UnionExpr(operand, unionOps);
     }
 }

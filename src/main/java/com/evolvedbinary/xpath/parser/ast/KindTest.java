@@ -22,7 +22,7 @@ package com.evolvedbinary.xpath.parser.ast;
 /**
  * Created by aretter on 30/01/2016.
  */
-public abstract class KindTest extends AbstractASTNode implements NodeTest {
+public abstract class KindTest extends AbstractASTNode implements NodeTest, ItemType {
     private final Kind kind;
 
     public enum Kind {

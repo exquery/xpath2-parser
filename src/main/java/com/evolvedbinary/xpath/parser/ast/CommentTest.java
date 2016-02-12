@@ -23,12 +23,13 @@ package com.evolvedbinary.xpath.parser.ast;
  * Created by aretter on 31/01/2016.
  */
 public class CommentTest extends KindTest {
-    public CommentTest() {
+    private final static CommentTest instance = new CommentTest();
+
+    private CommentTest() {
         super(Kind.COMMENT);
     }
 
-    @Override
-    public boolean equals(final Object obj) {
-        return obj != null && obj instanceof CommentTest;
+    public final static CommentTest instance() {
+        return instance;
     }
 }

@@ -17,19 +17,30 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-package com.evolvedbinary.xpath.parser.ast;
+package com.evolvedbinary.xpath.parser.ast.partial;
+
+import com.evolvedbinary.xpath.parser.ast.ItemType;
+import com.evolvedbinary.xpath.parser.ast.OccurrenceIndicator;
+import com.evolvedbinary.xpath.parser.ast.SequenceType;
+import org.jetbrains.annotations.Nullable;
 
 /**
- * Created by aretter on 31/01/2016.
+ * Created by aretter on 12/02/2016.
  */
-public class AnyKindTest extends KindTest {
-    private final static AnyKindTest instance = new AnyKindTest();
+public class PartialSequenceType extends AbstractPartialASTNode<SequenceType, OccurrenceIndicator> {
+    private final ItemType itemType;
 
-    private AnyKindTest() {
-        super(Kind.ANY);
+    public PartialSequenceType(final ItemType itemType) {
+        this.itemType = itemType;
     }
 
-    public final static AnyKindTest instance() {
-        return instance;
+    @Override
+    protected String describe() {
+        return "SequenceType(" +  itemType + ", ?)";
+    }
+
+    @Override
+    public SequenceType complete(@Nullable final OccurrenceIndicator occurrenceIndicator) {
+        return new SequenceType(itemType, occurrenceIndicator);
     }
 }

@@ -23,9 +23,9 @@ package com.evolvedbinary.xpath.parser.ast;
  * Created by aretter on 11/02/2016.
  */
 public class ValueExpr extends AbstractOperand {
-    public final AbstractASTNode pathExpr; //TODO(AR) should probably be PathExpr rather than AbstractASTNode
+    public final ASTNode pathExpr; //TODO(AR) should probably be PathExpr rather than ASTNode
 
-    public ValueExpr(final AbstractASTNode pathExpr) {
+    public ValueExpr(final ASTNode pathExpr) {
         this.pathExpr = pathExpr;
     }
 

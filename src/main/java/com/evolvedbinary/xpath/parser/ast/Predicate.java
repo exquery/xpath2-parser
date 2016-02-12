@@ -23,9 +23,9 @@ package com.evolvedbinary.xpath.parser.ast;
  * Created by aretter on 11/02/2016.
  */
 public class Predicate extends AbstractASTNode {
-    private final AbstractASTNode expr;
+    private final ASTNode expr;
 
-    public Predicate(final AbstractASTNode expr) {
+    public Predicate(final ASTNode expr) {
         this.expr = expr;
     }
 

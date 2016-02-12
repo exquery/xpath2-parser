@@ -20,16 +20,18 @@
 package com.evolvedbinary.xpath.parser.ast;
 
 /**
- * Created by aretter on 31/01/2016.
+ * Created by aretter on 12/02/2016.
  */
-public class AnyKindTest extends KindTest {
-    private final static AnyKindTest instance = new AnyKindTest();
+public class ItemTypeItem extends AbstractASTNode implements ItemType {
+    private final static ItemTypeItem instance = new ItemTypeItem();
+    private ItemTypeItem() {}
 
-    private AnyKindTest() {
-        super(Kind.ANY);
+    public final static ItemTypeItem instance() {
+        return instance;
     }
 
-    public final static AnyKindTest instance() {
-        return instance;
+    @Override
+    protected String describe() {
+        return "item()";
     }
 }

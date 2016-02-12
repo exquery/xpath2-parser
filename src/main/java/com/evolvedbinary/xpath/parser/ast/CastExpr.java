@@ -33,7 +33,7 @@ public class CastExpr extends AbstractOperand {
 
     @Override
     protected String describe() {
-        return "CastExpr(" + operand + " as " + type + ")";
+        return "CastExpr(" + operand + " cast as " + type + ")";
     }
 
     @Override
