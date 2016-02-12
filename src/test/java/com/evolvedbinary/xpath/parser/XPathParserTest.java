@@ -219,6 +219,13 @@ public class XPathParserTest {
     }
 
     @Test
+    public void parseNumericLiteral() {
+        assertEquals(new IntegerLiteral("123"), parse("123", parser.NumericLiteral()));
+        assertEquals(new DecimalLiteral("1.23"), parse("1.23", parser.NumericLiteral()));
+        assertEquals(new DoubleLiteral("1.23E2"), parse("1.23E2", parser.NumericLiteral()));
+    }
+
+    @Test
     public void parseVarRef() {
         assertEquals(new VarRef(new QNameW("a")), parse("$a", parser.VarRef()));
         assertEquals(new VarRef(new QNameW("ns", "a")), parse("$ns:a", parser.VarRef()));

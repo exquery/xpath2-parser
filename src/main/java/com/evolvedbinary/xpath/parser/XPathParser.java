@@ -624,7 +624,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      * [43] NumericLiteral ::= IntegerLiteral | DecimalLiteral | DoubleLiteral
      */
     Rule NumericLiteral() {
-        return FirstOf(IntegerLiteral(), DecimalLiteral(), DoubleLiteral());
+        return FirstOf(DoubleLiteral(), DecimalLiteral(), IntegerLiteral());
     }
 
     /**
