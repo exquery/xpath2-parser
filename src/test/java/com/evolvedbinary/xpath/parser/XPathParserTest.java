@@ -339,6 +339,18 @@ public class XPathParserTest {
         assertEquals(new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)), parse("123", parser.CastableExpr()));
     }
 
+    @Test
+    public void parseOccurrenceIndicator() {
+        assertEquals(new OccurrenceIndicator(OccurrenceIndicator.Occurrence.ZERO_OR_ONE), parse("?", parser.OccurrenceIndicator()));
+        assertEquals(new OccurrenceIndicator(OccurrenceIndicator.Occurrence.ZERO_OR_MORE), parse("*", parser.OccurrenceIndicator()));
+        assertEquals(new OccurrenceIndicator(OccurrenceIndicator.Occurrence.ONE_OR_MORE), parse("+", parser.OccurrenceIndicator()));
+    }
+
+    @Test
+    public void parseSequenceType() {
+        assertEquals(EmptySequenceType.instance(), parse("empty-sequence()", parser.SequenceType()));
+    }
+
     private ASTNode parse(final String xpath) {
         return parse(xpath, parser.XPath());
     }

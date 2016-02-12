@@ -279,6 +279,8 @@ public class XPathParser extends BaseParser<AbstractASTNode> {
 
     /**
      * [17] TreatExpr ::= CastableExpr ( "treat" "as" SequenceType )?
+     *
+     * Value stack head either: TratExpr/ CastableExpr / CastExpr / UnaryExpr / ValueExpr
      */
     Rule TreatExpr() {
         return Sequence(CastableExpr(), Optional(Sequence("treat", WS(), "as", WS(), SequenceType())));
@@ -611,14 +613,17 @@ public class XPathParser extends BaseParser<AbstractASTNode> {
      *                          | (ItemType OccurrenceIndicator?)
      */
     Rule SequenceType() {
-        return FirstOf(Sequence("empty-sequence", WS(), '(', WS(), ')', WS()), Sequence(ItemType(), Optional(OccurrenceIndicator())));
+        return FirstOf(
+                Sequence("empty-sequence", push(EmptySequenceType.instance()), WS(), '(', WS(), ')', WS()),
+                Sequence(ItemType(), Optional(OccurrenceIndicator()))
+        );
     }
 
     /**
      * [51] OccurrenceIndicator ::= "?" | "*" | "+"
      */
     Rule OccurrenceIndicator() {
-        return Sequence(FirstOf('?', '*', '+'), WS());
+        return Sequence(FirstOf('?', '*', '+'), push(OccurrenceIndicator.fromSyntax(match().charAt(0))), WS());
     }
 
     /**
