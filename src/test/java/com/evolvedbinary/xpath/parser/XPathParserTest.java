@@ -146,47 +146,47 @@ public class XPathParserTest {
 
     @Test
     public void parseFowardAxis() {
-        assertEquals(new Axis(Axis.Direction.CHILD), parse("child::", parser.ForwardAxis()));
-        assertEquals(new Axis(Axis.Direction.DESCENDANT), parse("descendant::", parser.ForwardAxis()));
-        assertEquals(new Axis(Axis.Direction.ATTRIBUTE), parse("attribute::", parser.ForwardAxis()));
-        assertEquals(new Axis(Axis.Direction.SELF), parse("self::*", parser.ForwardAxis()));
-        assertEquals(new Axis(Axis.Direction.DESCENDANT_OR_SELF), parse("descendant-or-self::", parser.ForwardAxis()));
-        assertEquals(new Axis(Axis.Direction.FOLLOWING_SIBLING), parse("following-sibling::", parser.ForwardAxis()));
-        assertEquals(new Axis(Axis.Direction.FOLLOWING), parse("following::", parser.ForwardAxis()));
-        assertEquals(new Axis(Axis.Direction.NAMESPACE), parse("namespace::", parser.ForwardAxis()));
+        assertEquals(Axis.CHILD, parse("child::", parser.ForwardAxis()));
+        assertEquals(Axis.DESCENDANT, parse("descendant::", parser.ForwardAxis()));
+        assertEquals(Axis.ATTRIBUTE, parse("attribute::", parser.ForwardAxis()));
+        assertEquals(Axis.SELF, parse("self::*", parser.ForwardAxis()));
+        assertEquals(Axis.DESCENDANT_OR_SELF, parse("descendant-or-self::", parser.ForwardAxis()));
+        assertEquals(Axis.FOLLOWING_SIBLING, parse("following-sibling::", parser.ForwardAxis()));
+        assertEquals(Axis.FOLLOWING, parse("following::", parser.ForwardAxis()));
+        assertEquals(Axis.NAMESPACE, parse("namespace::", parser.ForwardAxis()));
     }
 
     @Test
     public void parseAbbrevForwardStep() {
-        assertEquals(new Step(new Axis(Axis.Direction.CHILD), new ElementTest()), parse("element()", parser.AbbrevForwardStep()));
-        assertEquals(new Step(new Axis(Axis.Direction.ATTRIBUTE), WILDCARD), parse("@*", parser.AbbrevForwardStep()));
+        assertEquals(new Step(Axis.CHILD, new ElementTest()), parse("element()", parser.AbbrevForwardStep()));
+        assertEquals(new Step(Axis.ATTRIBUTE, WILDCARD), parse("@*", parser.AbbrevForwardStep()));
     }
 
     @Test
     public void parseForwardStep() {
-        assertEquals(new Step(new Axis(Axis.Direction.CHILD), WILDCARD), parse("child::*", parser.ForwardStep()));
-        assertEquals(new Step(new Axis(Axis.Direction.CHILD), new ElementTest()), parse("element()", parser.AbbrevForwardStep()));
-        assertEquals(new Step(new Axis(Axis.Direction.ATTRIBUTE), WILDCARD), parse("@*", parser.ForwardStep()));
+        assertEquals(new Step(Axis.CHILD, WILDCARD), parse("child::*", parser.ForwardStep()));
+        assertEquals(new Step(Axis.CHILD, new ElementTest()), parse("element()", parser.AbbrevForwardStep()));
+        assertEquals(new Step(Axis.ATTRIBUTE, WILDCARD), parse("@*", parser.ForwardStep()));
     }
 
     @Test
     public void parseReverseAxis() {
-        assertEquals(new Axis(Axis.Direction.PARENT), parse("parent::", parser.ReverseAxis()));
-        assertEquals(new Axis(Axis.Direction.ANCESTOR_OR_SELF), parse("ancestor-or-self::", parser.ReverseAxis()));
-        assertEquals(new Axis(Axis.Direction.ANCESTOR), parse("ancestor::", parser.ReverseAxis()));
-        assertEquals(new Axis(Axis.Direction.PRECEDING_SIBLING), parse("preceding-sibling::", parser.ReverseAxis()));
-        assertEquals(new Axis(Axis.Direction.PRECEDING), parse("preceding::", parser.ReverseAxis()));
+        assertEquals(Axis.PARENT, parse("parent::", parser.ReverseAxis()));
+        assertEquals(Axis.ANCESTOR_OR_SELF, parse("ancestor-or-self::", parser.ReverseAxis()));
+        assertEquals(Axis.ANCESTOR, parse("ancestor::", parser.ReverseAxis()));
+        assertEquals(Axis.PRECEDING_SIBLING, parse("preceding-sibling::", parser.ReverseAxis()));
+        assertEquals(Axis.PRECEDING, parse("preceding::", parser.ReverseAxis()));
     }
 
     @Test
     public void parseAbbrevReverseStep() {
-        assertEquals(new Step(new Axis(Axis.Direction.PARENT), AnyKindTest.instance()), parse("..", parser.AbbrevReverseStep()));
+        assertEquals(new Step(Axis.PARENT, AnyKindTest.instance()), parse("..", parser.AbbrevReverseStep()));
     }
 
     @Test
     public void parseReverseStep() {
-        assertEquals(new Step(new Axis(Axis.Direction.PARENT), WILDCARD), parse("parent::*", parser.ReverseStep()));
-        assertEquals(new Step(new Axis(Axis.Direction.PARENT), AnyKindTest.instance()), parse("..", parser.ReverseStep()));
+        assertEquals(new Step(Axis.PARENT, WILDCARD), parse("parent::*", parser.ReverseStep()));
+        assertEquals(new Step(Axis.PARENT, AnyKindTest.instance()), parse("..", parser.ReverseStep()));
     }
 
     @Test
@@ -266,7 +266,7 @@ public class XPathParserTest {
                         ContextItemExpr.instance(),
                         new PredicateList(Arrays.asList(
                                 new Predicate(new ValueExpr(new AxisStep(
-                                        new Step(new Axis(Axis.Direction.CHILD), new NameTest(new QNameW("a"))),
+                                        new Step(Axis.CHILD, new NameTest(new QNameW("a"))),
                                         PredicateList.EMPTY))
                                 )
                         ))
@@ -281,7 +281,7 @@ public class XPathParserTest {
     public void parseAxisStep() {
         assertEquals(
                 new AxisStep(
-                        new Step(new Axis(Axis.Direction.CHILD), new NameTest(new QNameW("a"))),
+                        new Step(Axis.CHILD, new NameTest(new QNameW("a"))),
                         new PredicateList(Arrays.asList(
                                 new Predicate(new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))),
                                 new Predicate(new ValueExpr(new FilterExpr(new IntegerLiteral("2"), PredicateList.EMPTY))),
@@ -292,7 +292,7 @@ public class XPathParserTest {
 
         assertEquals(
                 new AxisStep(
-                        new Step(new Axis(Axis.Direction.CHILD), new NameTest(new QNameW("a"))),
+                        new Step(Axis.CHILD, new NameTest(new QNameW("a"))),
                         new PredicateList(Arrays.asList(
                                 new Predicate(new ValueExpr(new FilterExpr(new FunctionCall(new QNameW("true"), Collections.<AbstractASTNode>emptyList()), PredicateList.EMPTY))),
                                 new Predicate(new ValueExpr(new FilterExpr(new FunctionCall(new QNameW("false"), Collections.<AbstractASTNode>emptyList()), PredicateList.EMPTY)))))
@@ -341,9 +341,9 @@ public class XPathParserTest {
 
     @Test
     public void parseOccurrenceIndicator() {
-        assertEquals(new OccurrenceIndicator(OccurrenceIndicator.Occurrence.ZERO_OR_ONE), parse("?", parser.OccurrenceIndicator()));
-        assertEquals(new OccurrenceIndicator(OccurrenceIndicator.Occurrence.ZERO_OR_MORE), parse("*", parser.OccurrenceIndicator()));
-        assertEquals(new OccurrenceIndicator(OccurrenceIndicator.Occurrence.ONE_OR_MORE), parse("+", parser.OccurrenceIndicator()));
+        assertEquals(OccurrenceIndicator.ZERO_OR_ONE, parse("?", parser.OccurrenceIndicator()));
+        assertEquals(OccurrenceIndicator.ZERO_OR_MORE, parse("*", parser.OccurrenceIndicator()));
+        assertEquals(OccurrenceIndicator.ONE_OR_MORE, parse("+", parser.OccurrenceIndicator()));
     }
 
     @Test
@@ -357,17 +357,17 @@ public class XPathParserTest {
     public void parseSequenceType() {
         assertEquals(SequenceType.EMPTY_SEQUENCE, parse("empty-sequence()", parser.SequenceType()));
         assertEquals(new SequenceType(ItemTypeItem.instance(), null), parse("item()", parser.SequenceType()));
-        assertEquals(new SequenceType(ItemTypeItem.instance(), new OccurrenceIndicator(OccurrenceIndicator.Occurrence.ONE_OR_MORE)), parse("item()+", parser.SequenceType()));
+        assertEquals(new SequenceType(ItemTypeItem.instance(), OccurrenceIndicator.ONE_OR_MORE), parse("item()+", parser.SequenceType()));
         assertEquals(new SequenceType(XS_STRING, null), parse("xs:string", parser.SequenceType()));
-        assertEquals(new SequenceType(XS_STRING, new OccurrenceIndicator(OccurrenceIndicator.Occurrence.ZERO_OR_MORE)), parse("xs:string*", parser.SequenceType()));
+        assertEquals(new SequenceType(XS_STRING, OccurrenceIndicator.ZERO_OR_MORE), parse("xs:string*", parser.SequenceType()));
     }
 
     @Test
     public void parseTreatExpr() {
-        assertEquals(new TreatExpr(new CastableExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, false)), new SingleType(XS_INTEGER, false)), new SequenceType(XS_STRING, new OccurrenceIndicator(OccurrenceIndicator.Occurrence.ZERO_OR_MORE))), parse("-123 cast as xs:int castable as xs:integer treat as xs:string*", parser.TreatExpr()));
+        assertEquals(new TreatExpr(new CastableExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, false)), new SingleType(XS_INTEGER, false)), new SequenceType(XS_STRING, OccurrenceIndicator.ZERO_OR_MORE)), parse("-123 cast as xs:int castable as xs:integer treat as xs:string*", parser.TreatExpr()));
         assertEquals(new TreatExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, false)), new SequenceType(XS_STRING, null)), parse("-123 cast as xs:int treat as xs:string", parser.TreatExpr()));
-        assertEquals(new TreatExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SequenceType(XS_INTEGER, new OccurrenceIndicator(OccurrenceIndicator.Occurrence.ZERO_OR_ONE))), parse("-123 treat as xs:integer?", parser.TreatExpr()));
-        assertEquals(new TreatExpr(new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)), new SequenceType(XS_INTEGER, new OccurrenceIndicator(OccurrenceIndicator.Occurrence.ONE_OR_MORE))), parse("123 treat as xs:integer+", parser.TreatExpr()));
+        assertEquals(new TreatExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SequenceType(XS_INTEGER, OccurrenceIndicator.ZERO_OR_ONE)), parse("-123 treat as xs:integer?", parser.TreatExpr()));
+        assertEquals(new TreatExpr(new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)), new SequenceType(XS_INTEGER, OccurrenceIndicator.ONE_OR_MORE)), parse("123 treat as xs:integer+", parser.TreatExpr()));
         assertEquals(new CastableExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, false)), new SingleType(XS_INTEGER, false)), parse("-123 cast as xs:int castable as xs:integer", parser.TreatExpr()));
         assertEquals(new CastableExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, true)), parse("-123 castable as xs:int?", parser.TreatExpr()));
         assertEquals(new CastableExpr(new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)), new SingleType(XS_STRING, false)), parse("123 castable as xs:string", parser.TreatExpr()));

@@ -19,13 +19,11 @@
  */
 package com.evolvedbinary.xpath.parser.ast;
 
-import com.sun.xml.internal.bind.v2.schemagen.xmlschema.Occurs;
-
 /**
  * Created by aretter on 11/02/2016.
  */
 public class OccurrenceIndicator extends AbstractASTNode {
-    public enum Occurrence {
+    private enum Occurrence {
         ZERO_OR_ONE('?'),
         ZERO_OR_MORE('*'),
         ONE_OR_MORE('+');
@@ -36,9 +34,13 @@ public class OccurrenceIndicator extends AbstractASTNode {
         }
     }
 
+    public static OccurrenceIndicator ZERO_OR_ONE = new OccurrenceIndicator(Occurrence.ZERO_OR_ONE);
+    public static OccurrenceIndicator ZERO_OR_MORE = new OccurrenceIndicator(Occurrence.ZERO_OR_MORE);
+    public static OccurrenceIndicator ONE_OR_MORE = new OccurrenceIndicator(Occurrence.ONE_OR_MORE);
+
     private final Occurrence occurrence;
 
-    public OccurrenceIndicator(final Occurrence occurrence) {
+    private OccurrenceIndicator(final Occurrence occurrence) {
         this.occurrence = occurrence;
     }
 

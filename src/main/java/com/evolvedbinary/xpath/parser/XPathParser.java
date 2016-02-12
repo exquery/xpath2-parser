@@ -506,8 +506,8 @@ public class XPathParser extends BaseParser<ASTNode> {
      */
     Rule AbbrevForwardStep() {
         return FirstOf(
-                Sequence('@', WS(), NodeTest(), push(new Step(new Axis(Axis.Direction.ATTRIBUTE), (NodeTest)pop()))),
-                Sequence(NodeTest(), push(new Step(new Axis(Axis.Direction.CHILD), (NodeTest)pop())))
+                Sequence('@', WS(), NodeTest(), push(new Step(Axis.ATTRIBUTE, (NodeTest)pop()))),
+                Sequence(NodeTest(), push(new Step(Axis.CHILD, (NodeTest)pop())))
         );
     }
 
@@ -545,7 +545,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      * [34] AbbrevReverseStep ::= ".."
      */
     Rule AbbrevReverseStep() {
-        return Sequence("..", push(new Step(new Axis(Axis.Direction.PARENT), AnyKindTest.instance())), WS());
+        return Sequence("..", push(new Step(Axis.PARENT, AnyKindTest.instance())), WS());
     }
 
     /**
