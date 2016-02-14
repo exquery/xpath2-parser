@@ -520,6 +520,60 @@ public class XPathParserTest {
                 ),
                 parse("1 to 3", parser.RangeExpr())
         );
+
+        assertEquals(
+                new RangeExpr(
+                        new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)),
+                        new AdditiveExpr(
+                                new ValueExpr(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY)),
+                                Arrays.asList(
+                                        new AdditiveExpr.AdditiveOp(AdditiveExpr.Additive.ADD, new CastExpr(new ValueExpr(new FilterExpr(new IntegerLiteral("9"), PredicateList.EMPTY)), new SingleType(XS_INTEGER, false)))
+                                )
+                        )
+                ),
+                parse("1 to 3 + 9 cast as xs:integer", parser.RangeExpr())
+        );
+    }
+
+    @Test
+    public void parseValueComp() {
+        assertEquals(ValueComp.EQUAL, parse("eq", parser.ValueComp()));
+        assertEquals(ValueComp.NOT_EQUAL, parse("ne", parser.ValueComp()));
+        assertEquals(ValueComp.LESS_THAN, parse("lt", parser.ValueComp()));
+        assertEquals(ValueComp.LESS_THAN_OR_EQUAL, parse("le", parser.ValueComp()));
+        assertEquals(ValueComp.GREATER_THAN, parse("gt", parser.ValueComp()));
+        assertEquals(ValueComp.GREATER_THAN_OR_EQUAL, parse("ge", parser.ValueComp()));
+    }
+
+    @Test
+    public void parseNodeComp() {
+        assertEquals(NodeComp.IS, parse("is", parser.NodeComp()));
+        assertEquals(NodeComp.PRECEDES, parse("<<", parser.NodeComp()));
+        assertEquals(NodeComp.FOLLOWS, parse(">>", parser.NodeComp()));
+    }
+
+    @Test
+    public void parseGeneralComp() {
+        assertEquals(GeneralComp.EQUAL, parse("=", parser.GeneralComp()));
+        assertEquals(GeneralComp.NOT_EQUAL, parse("!=", parser.GeneralComp()));
+        assertEquals(GeneralComp.LESS_THAN, parse("<", parser.GeneralComp()));
+        assertEquals(GeneralComp.LESS_THAN_OR_EQUAL, parse("<=", parser.GeneralComp()));
+        assertEquals(GeneralComp.GREATER_THAN, parse(">", parser.GeneralComp()));
+        assertEquals(GeneralComp.GREATER_THAN_OR_EQUAL, parse(">=", parser.GeneralComp()));
+    }
+
+    @Test
+    public void parseComparisonExpr() {
+        assertEquals(
+                new ComparisonExpr(
+                        new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)),
+                        ValueComp.EQUAL,
+                        new ValueExpr(new FilterExpr(new IntegerLiteral("2"), PredicateList.EMPTY))
+                ),
+                parse("1 eq 2", parser.ComparisonExpr())
+        );
+
+        //TODO(AR) more tests needed?
     }
 
     private ASTNode parse(final String xpath) {

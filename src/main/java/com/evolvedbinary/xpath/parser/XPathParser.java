@@ -221,21 +221,31 @@ public class XPathParser extends BaseParser<ASTNode> {
      * [10] ComparisonExpr ::=  RangeExpr ( (ValueComp
      *                          | GeneralComp
      *                          | NodeComp) RangeExpr )?
+     *
+     * Value stack head either: ComparisonExpr / RangeExpr / AdditiveExpr / MultiplicativeExpr / UnionExpr / IntersectExceptExpr / InstanceOfExpr / TreatExpr / CastableExpr / CastExpr / UnaryExpr / ValueExpr
      */
     Rule ComparisonExpr() {
-        return Sequence(
-                RangeExpr(),
-                Optional(Sequence(
-                        FirstOf(ValueComp(), NodeComp(), GeneralComp()),
-                        RangeExpr()
-                ))
+//        return Sequence(
+//                RangeExpr(),
+//                Optional(Sequence(
+//                        FirstOf(ValueComp(), NodeComp(), GeneralComp()),
+//                        RangeExpr()
+//                ))
+//        );
+        return FirstOf(
+                Sequence(
+                        RangeExpr(), push(new PartialComparisonExpr((AbstractOperand)pop())),
+                        FirstOf(ValueComp(), NodeComp(), GeneralComp()), push(complete(pop(), pop())),
+                        RangeExpr(), push(complete(pop(), pop()))
+                ),
+                RangeExpr()
         );
     }
 
     /**
      * [11] RangeExpr ::= AdditiveExpr ( "to" AdditiveExpr )?
      *
-     * Value stack head either: RangeExpr, AdditiveExpr / MultiplicativeExpr / UnionExpr / IntersectExceptExpr / InstanceOfExpr / TreatExpr / CastableExpr / CastExpr / UnaryExpr / ValueExpr
+     * Value stack head either: RangeExpr / AdditiveExpr / MultiplicativeExpr / UnionExpr / IntersectExceptExpr / InstanceOfExpr / TreatExpr / CastableExpr / CastExpr / UnaryExpr / ValueExpr
      */
     Rule RangeExpr() {
         //return Sequence(AdditiveExpr(), Optional(Sequence("to", WS(), AdditiveExpr())));
@@ -406,21 +416,30 @@ public class XPathParser extends BaseParser<ASTNode> {
      * [22] GeneralComp ::= "=" | "!=" | "<" | "<=" | ">" | ">="
      */
     Rule GeneralComp() {
-        return Sequence(FirstOf("<=", "!=", ">=", '<', '=', '>'), WS());
+        return Sequence(
+                FirstOf("<=", "!=", ">=", '<', '=', '>'), push(GeneralComp.fromSyntax(match())),
+                WS()
+        );
     }
 
     /**
      * [23] ValueComp ::= "eq" | "ne" | "lt" | "le" | "gt" | "ge"
      */
     Rule ValueComp() {
-        return Sequence(FirstOf("eq", "ne", "lt", "le", "gt", "ge"), WS());
+        return Sequence(
+                FirstOf("eq", "ne", "lt", "le", "gt", "ge"), push(ValueComp.fromSyntax(match())),
+                WS()
+        );
     }
 
     /**
      * [24] NodeComp ::= "is" | "<<" | ">>"
      */
     Rule NodeComp() {
-        return Sequence(FirstOf("is", "<<", ">>"), WS());
+        return Sequence(
+                FirstOf("is", "<<", ">>"), push(NodeComp.fromSyntax(match())),
+                WS()
+        );
     }
 
     /**
