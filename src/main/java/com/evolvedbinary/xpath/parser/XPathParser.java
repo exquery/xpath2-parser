@@ -148,7 +148,14 @@ public class XPathParser extends BaseParser<ASTNode> {
      * [2] Expr ::= ExprSingle ("," ExprSingle)*
      */
     Rule Expr() {
-        return Sequence(ExprSingle(), ZeroOrMore(Sequence(',', WS(), ExprSingle())));
+        final Var<List<ASTNode>> exprSingles = new Var<List<ASTNode>>(new ArrayList<ASTNode>());
+        return Sequence(
+                ExprSingle(), ACTION(exprSingles.get().add(pop())),
+                ZeroOrMore(
+                        Sequence(',', WS(), ExprSingle(), ACTION(exprSingles.get().add(pop())))
+                ),
+                push(new Expr(exprSingles.get()))
+        );
     }
 
     /**
@@ -666,7 +673,7 @@ public class XPathParser extends BaseParser<ASTNode> {
     Rule ParenthesizedExpr() {
         return Sequence(
                 '(', WS(),
-                Optional(Expr()),
+                Optional(Sequence(Expr(), push(new ParenthesizedExpr(pop())))),
                 ')', WS()
         );
     }
