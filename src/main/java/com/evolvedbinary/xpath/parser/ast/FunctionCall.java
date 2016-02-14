@@ -19,7 +19,6 @@
  */
 package com.evolvedbinary.xpath.parser.ast;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -36,7 +35,14 @@ public class FunctionCall extends PrimaryExpr {
 
     @Override
     protected String describe() {
-        return "FunctionCall(" + functionName + "(" + Arrays.toString(arguments.toArray()) + "))";
+        final  StringBuilder builder = new StringBuilder();
+        for(final AbstractASTNode argument : arguments) {
+            if(builder.length() > 0) {
+                builder.append(", ");
+            }
+            builder.append(argument.toString());
+        }
+        return "FunctionCall(" + functionName + "(" + builder.toString() + "))";
     }
 
     @Override

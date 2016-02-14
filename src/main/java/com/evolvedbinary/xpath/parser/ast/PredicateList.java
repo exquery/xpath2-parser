@@ -18,7 +18,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 package com.evolvedbinary.xpath.parser.ast;
-import java.util.Arrays;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -36,7 +36,14 @@ public class PredicateList extends AbstractASTNode {
 
     @Override
     protected String describe() {
-        return "PredicateList(" + Arrays.toString(predicates.toArray()) + ")";
+        final StringBuilder builder = new StringBuilder();
+        for(final Predicate predicate : predicates) {
+            if(builder.length() > 0) {
+                builder.append(", ");
+            }
+            builder.append(predicate.toString());
+        }
+        return "PredicateList(" + builder.toString() + ")";
     }
 
     @Override
