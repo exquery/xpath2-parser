@@ -19,29 +19,34 @@
  */
 package com.evolvedbinary.xpath.parser.ast;
 
-/**
- * Created by aretter on 11/02/2016.
- */
-public class FilterExpr extends AbstractASTNode implements StepExpr {
-    private final PrimaryExpr primaryExpr;
-    private final PredicateList predicateList;
+import java.util.List;
 
-    public FilterExpr(final PrimaryExpr primaryExpr, final PredicateList predicateList) {
-        this.primaryExpr = primaryExpr;
-        this.predicateList = predicateList;
+/**
+ * Created by aretter on 15/02/2016.
+ */
+public class RelativePathExpr extends AbstractASTNode {
+    private final List<? extends StepExpr> steps;
+
+    public RelativePathExpr(final List<? extends StepExpr> steps) {
+        this.steps = steps;
     }
 
     @Override
     protected String describe() {
-        return "FilterExpr(" + primaryExpr + ", " + predicateList + ")";
+        final StringBuilder builder = new StringBuilder();
+        for(final StepExpr step : steps) {
+            if(builder.length() > 0) {
+                builder.append(", ");
+            }
+            builder.append(step.toString());
+        }
+        return "RelativePathExpr(" + builder.toString() + ")";
     }
 
     @Override
     public boolean equals(final Object obj) {
-        if(obj != null && obj instanceof FilterExpr) {
-            final FilterExpr other = (FilterExpr)obj;
-            return other.primaryExpr.equals(primaryExpr)
-                    && other.predicateList.equals(predicateList);
+        if(obj != null && obj instanceof RelativePathExpr) {
+            return ((RelativePathExpr)obj).steps.equals(steps);
         }
 
         return false;

@@ -20,30 +20,7 @@
 package com.evolvedbinary.xpath.parser.ast;
 
 /**
- * Created by aretter on 11/02/2016.
+ * Created by aretter on 15/02/2016.
  */
-public class FilterExpr extends AbstractASTNode implements StepExpr {
-    private final PrimaryExpr primaryExpr;
-    private final PredicateList predicateList;
-
-    public FilterExpr(final PrimaryExpr primaryExpr, final PredicateList predicateList) {
-        this.primaryExpr = primaryExpr;
-        this.predicateList = predicateList;
-    }
-
-    @Override
-    protected String describe() {
-        return "FilterExpr(" + primaryExpr + ", " + predicateList + ")";
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if(obj != null && obj instanceof FilterExpr) {
-            final FilterExpr other = (FilterExpr)obj;
-            return other.primaryExpr.equals(primaryExpr)
-                    && other.predicateList.equals(predicateList);
-        }
-
-        return false;
-    }
+public interface StepExpr extends ASTNode {
 }

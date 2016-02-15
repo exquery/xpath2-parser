@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 
 //TODO(AR) think about whether we can remove the use of org.parboiled.support.Var in favour of PartialASTNode, then we would have an immutable AST production
+//TODO(AR) may be possible to replace some uses of Var with popAllR
 
 @BuildParseTree
 public class XPathParser extends BaseParser<ASTNode> {
@@ -92,10 +93,10 @@ public class XPathParser extends BaseParser<ASTNode> {
      * @param type The type of nodes to pop
      * @return A list of the nodes in stack order
      */
-    <T extends AbstractASTNode> List<T> popAll(final Class<T> type) {
+    <T extends ASTNode> List<T> popAll(final Class<T> type) {
         final List<T> items = new ArrayList<T>();
         while(!getContext().getValueStack().isEmpty() &&
-                peek().getClass().isAssignableFrom(type)) {
+                type.isAssignableFrom(peek().getClass())) {
             items.add((T)pop());
         }
 
@@ -109,7 +110,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      * @param type The type of nodes to pop
      * @return A list of the nodes in reverse stack order
      */
-    <T extends AbstractASTNode> List<T> popAllR(final Class<T> type) {
+    <T extends ASTNode> List<T> popAllR(final Class<T> type) {
         final List<T> items = popAll(type);
         Collections.reverse(items);
         return items;
@@ -144,7 +145,7 @@ public class XPathParser extends BaseParser<ASTNode> {
                 ZeroOrMore(
                         Sequence(',', WS(), ExprSingle(), ACTION(exprSingles.get().add(pop())))
                 ),
-                push(new Expr(exprSingles.get()))
+                push(new Expr(exprSingles.getAndClear()))
         );
     }
 
@@ -184,10 +185,14 @@ public class XPathParser extends BaseParser<ASTNode> {
      * [6] QuantifiedExpr ::= ("some" | "every") "$" VarName "in" ExprSingle ("," "$" VarName "in" ExprSingle)* "satisfies" ExprSingle
      */
     Rule QuantifiedExpr() {
+        final Var<List<QuantifiedExpr.InClause>> inClauses = new Var<List<QuantifiedExpr.InClause>>(new ArrayList<QuantifiedExpr.InClause>());
+        final Var<QNameW> varName = new Var<QNameW>();
         return Sequence(
-                FirstOf("some", "every"), WS(), '$', WS(), VarName(), "in", WS(), ExprSingle(),
-                    ZeroOrMore(',', WS(), '$', WS(), VarName(), "in", WS(), ExprSingle()),
-                        "satisfies", WS(), ExprSingle()
+                FirstOf("some", "every"), push(new PartialQuantifierExpr(QuantifiedExpr.Quantifier.fromSyntax(match()))),
+                WS(),
+                '$', WS(), VarName(), ACTION(varName.set((QNameW)pop())), "in", WS(), ExprSingle(), ACTION(inClauses.get().add(new QuantifiedExpr.InClause(varName.getAndClear(), pop()))),
+                ZeroOrMore(',', WS(), '$', WS(), VarName(),  ACTION(varName.set((QNameW)pop())), "in", WS(), ExprSingle(), ACTION(inClauses.get().add(new QuantifiedExpr.InClause(varName.getAndClear(), pop())))), push(complete(inClauses.getAndClear(), pop())),
+                "satisfies", WS(), ExprSingle(), push(complete(pop(), pop()))
         );
     }
 
@@ -196,7 +201,9 @@ public class XPathParser extends BaseParser<ASTNode> {
      */
     Rule IfExpr() {
         return Sequence(
-                "if", WS(), '(', WS(), Expr(), ')', WS(), "then", WS(), ExprSingle(), "else", WS(), ExprSingle()
+                "if", WS(), '(', WS(), Expr(), push(new PartialIfExpr((Expr)pop())), ')', WS(),
+                "then", WS(), ExprSingle(), push(complete(pop(), pop())),
+                "else", WS(), ExprSingle(), push(complete(pop(), pop()))
         );
     }
 
@@ -212,7 +219,7 @@ public class XPathParser extends BaseParser<ASTNode> {
                                 "or",
                                 WS(),
                                 AndExpr(), ACTION(orOps.get().add((AbstractOperand)pop()))
-                        )), push(complete(orOps.get(), pop()))
+                        )), push(complete(orOps.getAndClear(), pop()))
                 ),
                 AndExpr()
         );
@@ -230,7 +237,7 @@ public class XPathParser extends BaseParser<ASTNode> {
                                 "and",
                                 WS(),
                                 ComparisonExpr(), ACTION(andOps.get().add((AbstractOperand)pop()))
-                        )), push(complete(andOps.get(), pop()))
+                        )), push(complete(andOps.getAndClear(), pop()))
                 ),
                 ComparisonExpr()
         );
@@ -287,8 +294,8 @@ public class XPathParser extends BaseParser<ASTNode> {
                                 WS(),
                                 FirstOf('+', '-'), ACTION(additive.set(AdditiveExpr.Additive.fromSyntax(match().charAt(0)))),
                                 WS(),
-                                MultiplicativeExpr(), ACTION(additiveOps.get().add(new AdditiveExpr.AdditiveOp(additive.get(), (AbstractOperand)pop())))
-                        )), push(complete(additiveOps.get(), pop()))
+                                MultiplicativeExpr(), ACTION(additiveOps.get().add(new AdditiveExpr.AdditiveOp(additive.getAndClear(), (AbstractOperand)pop())))
+                        )), push(complete(additiveOps.getAndClear(), pop()))
                 ),
                 MultiplicativeExpr()
         );
@@ -309,8 +316,8 @@ public class XPathParser extends BaseParser<ASTNode> {
                                 WS(),
                                 FirstOf('*', "idiv", "div", "mod"), ACTION(multiplicative.set(MultiplicativeExpr.Multiplicative.fromSyntax(match()))),
                                 WS(),
-                                UnionExpr(), ACTION(multiplicativeOps.get().add(new MultiplicativeExpr.MultiplicativeOp(multiplicative.get(), (AbstractOperand)pop())))
-                        )), push(complete(multiplicativeOps.get(), pop()))
+                                UnionExpr(), ACTION(multiplicativeOps.get().add(new MultiplicativeExpr.MultiplicativeOp(multiplicative.getAndClear(), (AbstractOperand)pop())))
+                        )), push(complete(multiplicativeOps.getAndClear(), pop()))
                 ),
                 UnionExpr()
         );
@@ -331,7 +338,7 @@ public class XPathParser extends BaseParser<ASTNode> {
                             FirstOf("union", '|'),
                             WS(),
                             IntersectExceptExpr(), ACTION(unionOps.get().add((AbstractOperand)pop()))
-                    )), push(complete(unionOps.get(), pop()))
+                    )), push(complete(unionOps.getAndClear(), pop()))
                 ),
                 IntersectExceptExpr()
         );
@@ -354,8 +361,8 @@ public class XPathParser extends BaseParser<ASTNode> {
                                 WS(),
                                 FirstOf("intersect", "except"), ACTION(intersectExcept.set(IntersectExceptExpr.IntersectExcept.fromSyntax(match()))),
                                 WS(),
-                                InstanceofExpr(), ACTION(intersectExceptOps.get().add(new IntersectExceptExpr.IntersectExceptOp(intersectExcept.get(), (AbstractOperand)pop())))
-                        )), push(complete(intersectExceptOps.get(), pop()))),
+                                InstanceofExpr(), ACTION(intersectExceptOps.get().add(new IntersectExceptExpr.IntersectExceptOp(intersectExcept.getAndClear(), (AbstractOperand)pop())))
+                        )), push(complete(intersectExceptOps.getAndClear(), pop()))),
                 InstanceofExpr()
         );
     }
@@ -451,9 +458,18 @@ public class XPathParser extends BaseParser<ASTNode> {
      *                      | RelativePathExpr
      */
     Rule PathExpr() {
+        //TODO(AR) convert RelativePathExpr to PathExpr, or encapsulate PathExpr(RelativePathExpr)
         return FirstOf(
-                Sequence("//", WS(), RelativePathExpr()),
-                Sequence('/', WS(), Optional(RelativePathExpr())),
+                Sequence(
+                        "//",
+                        WS(),
+                        RelativePathExpr()
+                ),
+                Sequence(
+                        '/',
+                        WS(),
+                        Optional(RelativePathExpr())
+                ),
                 RelativePathExpr()
         );
     }
@@ -466,10 +482,15 @@ public class XPathParser extends BaseParser<ASTNode> {
                 StepExpr(),
                 ZeroOrMore(
                         Sequence(
-                                FirstOf("//", '/'), WS(),
+                                FirstOf(
+                                        Sequence("//", push(AxisStep.SLASH_SLASH_ABBREV)),
+                                        '/'
+                                ),
+                                WS(),
                                 StepExpr()
                         )
-                )
+                ),
+                push(new RelativePathExpr(popAllR(StepExpr.class)))
         );
     }
 
@@ -690,7 +711,7 @@ public class XPathParser extends BaseParser<ASTNode> {
         return Sequence(
                QName(), push(new PartialFunctionCall((QNameW)pop())),
                 '(', WS(), Optional(Sequence(ExprSingle(), ACTION(arguments.get().add(pop())), ZeroOrMore(Sequence(',', WS(), ExprSingle(), ACTION(arguments.get().add(pop())))))), ')', WS(),
-                push(complete(arguments.get(), pop()))
+                push(complete(arguments.getAndClear(), pop()))
         );
     }
 
@@ -776,7 +797,14 @@ public class XPathParser extends BaseParser<ASTNode> {
      * [56] DocumentTest ::= "document-node" "(" (ElementTest | SchemaElementTest)? ")"
      */
     Rule DocumentTest() {
-        return Sequence("document-node", push(new PartialDocumentTest()), WS(), '(', WS(), Optional(FirstOf(Sequence(ElementTest(), push(complete(Either.Left(pop()), pop()))), Sequence(SchemaElementTest(), push(complete(Either.Right(pop()), pop()))))), ')', WS());
+        return Sequence(
+                "document-node", push(new PartialDocumentTest()),
+                WS(), '(', WS(),
+                Optional(FirstOf(
+                        Sequence(ElementTest(), push(complete(Either.Left(pop()), pop()))),
+                        Sequence(SchemaElementTest(), push(complete(Either.Right(pop()), pop())))
+                )),
+                ')', WS(), push(completeOptional(pop())));
     }
 
     /**

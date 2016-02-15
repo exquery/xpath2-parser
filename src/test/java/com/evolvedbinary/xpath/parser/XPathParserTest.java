@@ -45,6 +45,9 @@ public class XPathParserTest {
     private final static AtomicType XS_INTEGER = new AtomicType(new QNameW("xs", "integer"));
     private final static AtomicType XS_STRING = new AtomicType(new QNameW("xs", "string"));
 
+    private final static FunctionCall FN_TRUE = new FunctionCall(new QNameW("true"), Collections.<AbstractASTNode>emptyList());
+    private final static FunctionCall FN_FALSE = new FunctionCall(new QNameW("false"), Collections.<AbstractASTNode>emptyList());
+
     final boolean DEBUG = true;
     final XPathParser parser = Parboiled.createParser(XPathParser.class, Boolean.TRUE);
 
@@ -90,6 +93,7 @@ public class XPathParserTest {
 
     @Test
     public void parseDocumentTest() {
+        assertEquals(new DocumentTest(null), parse("document-node()", parser.DocumentTest()));
         assertEquals(new DocumentTest(Either.<ElementTest, SchemaElementTest>Left(new ElementTest(new QNameW("a")))), parse("document-node(element(a))", parser.DocumentTest()));
         assertEquals(new DocumentTest(Either.<ElementTest, SchemaElementTest>Right(new SchemaElementTest(new QNameW("a")))), parse("document-node(schema-element(a))", parser.DocumentTest()));
     }
@@ -142,6 +146,28 @@ public class XPathParserTest {
         assertEquals(new StringLiteral("some \"string\""), parse("'some \"string\"'", parser.StringLiteral()));
         assertEquals(new StringLiteral("some \"string\""), parse("\"some \"\"string\"\"\"", parser.StringLiteral()));
         assertEquals(new StringLiteral("some 'string'"), parse("'some ''string'''", parser.StringLiteral()));
+    }
+
+    @Test
+    public void parseStepExpr() {
+        assertEquals(
+                new FilterExpr(
+                        new ParenthesizedExpr(new Expr(Arrays.asList(
+                                new TreatExpr(
+                                        new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(
+                                                new FunctionCall(
+                                                        new QNameW("fn", "root"),
+                                                        Arrays.asList(new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.SELF, AnyKindTest.instance()), PredicateList.EMPTY)))))
+                                                ),
+                                                PredicateList.EMPTY
+                                        )))),
+                                        new SequenceType(new DocumentTest(null), null)
+                                )
+                        ))),
+                        PredicateList.EMPTY
+                ),
+                parse("(fn:root(self::node()) treat as document-node())", parser.StepExpr())
+        );
     }
 
     @Test
@@ -233,19 +259,19 @@ public class XPathParserTest {
 
     @Test
     public void parsePredicate() {
-        assertEquals(new Predicate(new Expr(Arrays.asList(new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))))), parse("[1]", parser.Predicate()));
-        assertEquals(new Predicate(new Expr(Arrays.asList(new ValueExpr(new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY))))), parse("[$a]", parser.Predicate()));
-        assertEquals(new Predicate(new Expr(Arrays.asList(new ValueExpr(new FilterExpr(new FunctionCall(new QNameW("true"), Collections.<AbstractASTNode>emptyList()), PredicateList.EMPTY))))), parse("[true()]", parser.Predicate()));
+        assertEquals(new Predicate(new Expr(Arrays.asList(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))))))), parse("[1]", parser.Predicate()));
+        assertEquals(new Predicate(new Expr(Arrays.asList(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY))))))), parse("[$a]", parser.Predicate()));
+        assertEquals(new Predicate(new Expr(Arrays.asList(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(FN_TRUE, PredicateList.EMPTY))))))), parse("[true()]", parser.Predicate()));
     }
 
     @Test
     public void parsePredicateList() {
-        assertEquals(new PredicateList(Arrays.asList(new Predicate(new Expr(Arrays.asList(new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))))))), parse("[1]", parser.PredicateList()));
+        assertEquals(new PredicateList(Arrays.asList(new Predicate(new Expr(Arrays.asList(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))))))))), parse("[1]", parser.PredicateList()));
         assertEquals(
                 new PredicateList(Arrays.asList(
-                        new Predicate(new Expr(Arrays.asList(new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))))),
-                        new Predicate(new Expr(Arrays.asList(new ValueExpr(new FilterExpr(new IntegerLiteral("2"), PredicateList.EMPTY))))),
-                        new Predicate(new Expr(Arrays.asList(new ValueExpr(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY)))))
+                        new Predicate(new Expr(Arrays.asList(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))))))),
+                        new Predicate(new Expr(Arrays.asList(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("2"), PredicateList.EMPTY))))))),
+                        new Predicate(new Expr(Arrays.asList(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY)))))))
                 )),
                 parse("[1][2][3]", parser.PredicateList())
         );
@@ -253,11 +279,11 @@ public class XPathParserTest {
 
     @Test
     public void parseFunctionCall() {
-        assertEquals(new FunctionCall(new QNameW("true"), Collections.<AbstractASTNode>emptyList()), parse("true()", parser.FunctionCall()));
-        assertEquals(new FunctionCall(new QNameW("false"), Collections.<AbstractASTNode>emptyList()), parse("false()", parser.FunctionCall()));
-        assertEquals(new FunctionCall(new QNameW("local", "hello"), Arrays.asList(new ValueExpr(new FilterExpr(new StringLiteral("world"), PredicateList.EMPTY)))), parse("local:hello(\"world\")", parser.FunctionCall()));
-        assertEquals(new FunctionCall(new QNameW("local", "hello"), Arrays.asList(new ValueExpr(new FilterExpr(new StringLiteral("world"), PredicateList.EMPTY)), new ValueExpr(new FilterExpr(new StringLiteral("again"), PredicateList.EMPTY)))), parse("local:hello(\"world\", \"again\")", parser.FunctionCall()));
-        assertEquals(new FunctionCall(new QNameW("other"), Arrays.asList(new ValueExpr(new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY)))), parse("other($a)", parser.FunctionCall()));
+        assertEquals(FN_TRUE, parse("true()", parser.FunctionCall()));
+        assertEquals(FN_FALSE, parse("false()", parser.FunctionCall()));
+        assertEquals(new FunctionCall(new QNameW("local", "hello"), Arrays.asList(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new StringLiteral("world"), PredicateList.EMPTY)))))), parse("local:hello(\"world\")", parser.FunctionCall()));
+        assertEquals(new FunctionCall(new QNameW("local", "hello"), Arrays.asList(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new StringLiteral("world"), PredicateList.EMPTY)))), new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new StringLiteral("again"), PredicateList.EMPTY)))))), parse("local:hello(\"world\", \"again\")", parser.FunctionCall()));
+        assertEquals(new FunctionCall(new QNameW("other"), Arrays.asList(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY)))))), parse("other($a)", parser.FunctionCall()));
     }
 
     @Test
@@ -272,9 +298,9 @@ public class XPathParserTest {
                 new FilterExpr(
                         ContextItemExpr.instance(),
                         new PredicateList(Arrays.asList(
-                                new Predicate(new Expr(Arrays.asList(new ValueExpr(new AxisStep(
+                                new Predicate(new Expr(Arrays.asList(new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(
                                         new Step(Axis.CHILD, new NameTest(new QNameW("a"))),
-                                        PredicateList.EMPTY))
+                                        PredicateList.EMPTY))))
                                 )))
                         ))
                 ),
@@ -290,9 +316,9 @@ public class XPathParserTest {
                 new AxisStep(
                         new Step(Axis.CHILD, new NameTest(new QNameW("a"))),
                         new PredicateList(Arrays.asList(
-                                new Predicate(new Expr(Arrays.asList(new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))))),
-                                new Predicate(new Expr(Arrays.asList(new ValueExpr(new FilterExpr(new IntegerLiteral("2"), PredicateList.EMPTY))))),
-                                new Predicate(new Expr(Arrays.asList(new ValueExpr(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY))))))
+                                new Predicate(new Expr(Arrays.asList(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))))))),
+                                new Predicate(new Expr(Arrays.asList(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("2"), PredicateList.EMPTY))))))),
+                                new Predicate(new Expr(Arrays.asList(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY))))))))
                         )
                 ),
                 parse("a[1][2][3]", parser.AxisStep())
@@ -302,8 +328,8 @@ public class XPathParserTest {
                 new AxisStep(
                         new Step(Axis.CHILD, new NameTest(new QNameW("a"))),
                         new PredicateList(Arrays.asList(
-                                new Predicate(new Expr(Arrays.asList(new ValueExpr(new FilterExpr(new FunctionCall(new QNameW("true"), Collections.<AbstractASTNode>emptyList()), PredicateList.EMPTY))))),
-                                new Predicate(new Expr(Arrays.asList(new ValueExpr(new FilterExpr(new FunctionCall(new QNameW("false"), Collections.<AbstractASTNode>emptyList()), PredicateList.EMPTY)))))))
+                                new Predicate(new Expr(Arrays.asList(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(FN_TRUE, PredicateList.EMPTY))))))),
+                                new Predicate(new Expr(Arrays.asList(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(FN_FALSE, PredicateList.EMPTY)))))))))
                 ),
                 parse("a[true()][false()]", parser.AxisStep())
         );
@@ -311,9 +337,9 @@ public class XPathParserTest {
 
     @Test
     public void parseUnaryExpr() {
-        assertEquals(new UnaryExpr("+-", new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))), parse("+-1", parser.UnaryExpr()));
-        assertEquals(new UnaryExpr("--", new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))), parse("--1", parser.UnaryExpr()));
-        assertEquals(new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)), parse("1", parser.UnaryExpr()));
+        assertEquals(new UnaryExpr("+-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))))), parse("+-1", parser.UnaryExpr()));
+        assertEquals(new UnaryExpr("--", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))))), parse("--1", parser.UnaryExpr()));
+        assertEquals(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)))), parse("1", parser.UnaryExpr()));
     }
 
     @Test
@@ -330,21 +356,21 @@ public class XPathParserTest {
 
     @Test
     public void parseCastExpr() {
-        assertEquals(new CastExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, false)), parse("-123 cast as xs:int", parser.CastExpr()));
-        assertEquals(new CastExpr(new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)), new SingleType(XS_INT, false)), parse("123 cast as xs:int", parser.CastExpr()));
-        assertEquals(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), parse("-123", parser.CastExpr()));
-        assertEquals(new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)), parse("123", parser.CastExpr()));
+        assertEquals(new CastExpr(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), new SingleType(XS_INT, false)), parse("-123 cast as xs:int", parser.CastExpr()));
+        assertEquals(new CastExpr(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)))), new SingleType(XS_INT, false)), parse("123 cast as xs:int", parser.CastExpr()));
+        assertEquals(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), parse("-123", parser.CastExpr()));
+        assertEquals(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)))), parse("123", parser.CastExpr()));
     }
 
     @Test
     public void parseCastableExpr() {
-        assertEquals(new CastableExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, false)), new SingleType(XS_INTEGER, false)), parse("-123 cast as xs:int castable as xs:integer", parser.CastableExpr()));
-        assertEquals(new CastableExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, true)), parse("-123 castable as xs:int?", parser.CastableExpr()));
-        assertEquals(new CastableExpr(new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)), new SingleType(XS_STRING, false)), parse("123 castable as xs:string", parser.CastableExpr()));
-        assertEquals(new CastExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, false)), parse("-123 cast as xs:int", parser.CastableExpr()));
-        assertEquals(new CastExpr(new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)), new SingleType(XS_INT, false)), parse("123 cast as xs:int", parser.CastableExpr()));
-        assertEquals(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), parse("-123", parser.CastableExpr()));
-        assertEquals(new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)), parse("123", parser.CastableExpr()));
+        assertEquals(new CastableExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), new SingleType(XS_INT, false)), new SingleType(XS_INTEGER, false)), parse("-123 cast as xs:int castable as xs:integer", parser.CastableExpr()));
+        assertEquals(new CastableExpr(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), new SingleType(XS_INT, true)), parse("-123 castable as xs:int?", parser.CastableExpr()));
+        assertEquals(new CastableExpr(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)))), new SingleType(XS_STRING, false)), parse("123 castable as xs:string", parser.CastableExpr()));
+        assertEquals(new CastExpr(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), new SingleType(XS_INT, false)), parse("-123 cast as xs:int", parser.CastableExpr()));
+        assertEquals(new CastExpr(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)))), new SingleType(XS_INT, false)), parse("123 cast as xs:int", parser.CastableExpr()));
+        assertEquals(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), parse("-123", parser.CastableExpr()));
+        assertEquals(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)))), parse("123", parser.CastableExpr()));
     }
 
     @Test
@@ -372,61 +398,61 @@ public class XPathParserTest {
 
     @Test
     public void parseTreatExpr() {
-        assertEquals(new TreatExpr(new CastableExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, false)), new SingleType(XS_INTEGER, false)), new SequenceType(XS_STRING, OccurrenceIndicator.ZERO_OR_MORE)), parse("-123 cast as xs:int castable as xs:integer treat as xs:string*", parser.TreatExpr()));
-        assertEquals(new TreatExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, false)), new SequenceType(XS_STRING, null)), parse("-123 cast as xs:int treat as xs:string", parser.TreatExpr()));
-        assertEquals(new TreatExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SequenceType(XS_INTEGER, OccurrenceIndicator.ZERO_OR_ONE)), parse("-123 treat as xs:integer?", parser.TreatExpr()));
-        assertEquals(new TreatExpr(new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)), new SequenceType(XS_INTEGER, OccurrenceIndicator.ONE_OR_MORE)), parse("123 treat as xs:integer+", parser.TreatExpr()));
-        assertEquals(new CastableExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, false)), new SingleType(XS_INTEGER, false)), parse("-123 cast as xs:int castable as xs:integer", parser.TreatExpr()));
-        assertEquals(new CastableExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, true)), parse("-123 castable as xs:int?", parser.TreatExpr()));
-        assertEquals(new CastableExpr(new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)), new SingleType(XS_STRING, false)), parse("123 castable as xs:string", parser.TreatExpr()));
-        assertEquals(new CastExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, false)), parse("-123 cast as xs:int", parser.TreatExpr()));
-        assertEquals(new CastExpr(new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)), new SingleType(XS_INT, false)), parse("123 cast as xs:int", parser.TreatExpr()));
-        assertEquals(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), parse("-123", parser.TreatExpr()));
-        assertEquals(new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)), parse("123", parser.TreatExpr()));
+        assertEquals(new TreatExpr(new CastableExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), new SingleType(XS_INT, false)), new SingleType(XS_INTEGER, false)), new SequenceType(XS_STRING, OccurrenceIndicator.ZERO_OR_MORE)), parse("-123 cast as xs:int castable as xs:integer treat as xs:string*", parser.TreatExpr()));
+        assertEquals(new TreatExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), new SingleType(XS_INT, false)), new SequenceType(XS_STRING, null)), parse("-123 cast as xs:int treat as xs:string", parser.TreatExpr()));
+        assertEquals(new TreatExpr(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), new SequenceType(XS_INTEGER, OccurrenceIndicator.ZERO_OR_ONE)), parse("-123 treat as xs:integer?", parser.TreatExpr()));
+        assertEquals(new TreatExpr(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)))), new SequenceType(XS_INTEGER, OccurrenceIndicator.ONE_OR_MORE)), parse("123 treat as xs:integer+", parser.TreatExpr()));
+        assertEquals(new CastableExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), new SingleType(XS_INT, false)), new SingleType(XS_INTEGER, false)), parse("-123 cast as xs:int castable as xs:integer", parser.TreatExpr()));
+        assertEquals(new CastableExpr(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), new SingleType(XS_INT, true)), parse("-123 castable as xs:int?", parser.TreatExpr()));
+        assertEquals(new CastableExpr(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)))), new SingleType(XS_STRING, false)), parse("123 castable as xs:string", parser.TreatExpr()));
+        assertEquals(new CastExpr(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), new SingleType(XS_INT, false)), parse("-123 cast as xs:int", parser.TreatExpr()));
+        assertEquals(new CastExpr(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)))), new SingleType(XS_INT, false)), parse("123 cast as xs:int", parser.TreatExpr()));
+        assertEquals(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), parse("-123", parser.TreatExpr()));
+        assertEquals(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)))), parse("123", parser.TreatExpr()));
     }
 
     @Test
     public void parseInstanceOfExpr() {
-        assertEquals(new InstanceOfExpr(new TreatExpr(new CastableExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, false)), new SingleType(XS_INTEGER, false)), new SequenceType(XS_STRING, OccurrenceIndicator.ZERO_OR_MORE)), new SequenceType(XS_STRING, OccurrenceIndicator.ZERO_OR_MORE)), parse("-123 cast as xs:int castable as xs:integer treat as xs:string* instance of xs:string*", parser.InstanceofExpr()));
-        assertEquals(new InstanceOfExpr(new CastableExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, false)), new SingleType(XS_INTEGER, false)), new SequenceType(XS_STRING, OccurrenceIndicator.ZERO_OR_MORE)), parse("-123 cast as xs:int castable as xs:integer instance of xs:string*", parser.InstanceofExpr()));
-        assertEquals(new InstanceOfExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, false)), new SequenceType(XS_INTEGER, null)), parse("-123 cast as xs:int instance of xs:integer", parser.InstanceofExpr()));
-        assertEquals(new InstanceOfExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SequenceType(XS_INTEGER, OccurrenceIndicator.ZERO_OR_ONE)), parse("-123 instance of xs:integer?", parser.InstanceofExpr()));
-        assertEquals(new InstanceOfExpr(new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)), new SequenceType(XS_INT, OccurrenceIndicator.ONE_OR_MORE)), parse("123 instance of xs:int+", parser.InstanceofExpr()));
-        assertEquals(new TreatExpr(new CastableExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, false)), new SingleType(XS_INTEGER, false)), new SequenceType(XS_STRING, OccurrenceIndicator.ZERO_OR_MORE)), parse("-123 cast as xs:int castable as xs:integer treat as xs:string*", parser.InstanceofExpr()));
-        assertEquals(new TreatExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, false)), new SequenceType(XS_STRING, null)), parse("-123 cast as xs:int treat as xs:string", parser.InstanceofExpr()));
-        assertEquals(new TreatExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SequenceType(XS_INTEGER, OccurrenceIndicator.ZERO_OR_ONE)), parse("-123 treat as xs:integer?", parser.InstanceofExpr()));
-        assertEquals(new TreatExpr(new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)), new SequenceType(XS_INTEGER, OccurrenceIndicator.ONE_OR_MORE)), parse("123 treat as xs:integer+", parser.InstanceofExpr()));
-        assertEquals(new CastableExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, false)), new SingleType(XS_INTEGER, false)), parse("-123 cast as xs:int castable as xs:integer", parser.InstanceofExpr()));
-        assertEquals(new CastableExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, true)), parse("-123 castable as xs:int?", parser.InstanceofExpr()));
-        assertEquals(new CastableExpr(new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)), new SingleType(XS_STRING, false)), parse("123 castable as xs:string", parser.InstanceofExpr()));
-        assertEquals(new CastExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, false)), parse("-123 cast as xs:int", parser.InstanceofExpr()));
-        assertEquals(new CastExpr(new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)), new SingleType(XS_INT, false)), parse("123 cast as xs:int", parser.InstanceofExpr()));
-        assertEquals(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), parse("-123", parser.InstanceofExpr()));
-        assertEquals(new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)), parse("123", parser.InstanceofExpr()));
+        assertEquals(new InstanceOfExpr(new TreatExpr(new CastableExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), new SingleType(XS_INT, false)), new SingleType(XS_INTEGER, false)), new SequenceType(XS_STRING, OccurrenceIndicator.ZERO_OR_MORE)), new SequenceType(XS_STRING, OccurrenceIndicator.ZERO_OR_MORE)), parse("-123 cast as xs:int castable as xs:integer treat as xs:string* instance of xs:string*", parser.InstanceofExpr()));
+        assertEquals(new InstanceOfExpr(new CastableExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), new SingleType(XS_INT, false)), new SingleType(XS_INTEGER, false)), new SequenceType(XS_STRING, OccurrenceIndicator.ZERO_OR_MORE)), parse("-123 cast as xs:int castable as xs:integer instance of xs:string*", parser.InstanceofExpr()));
+        assertEquals(new InstanceOfExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), new SingleType(XS_INT, false)), new SequenceType(XS_INTEGER, null)), parse("-123 cast as xs:int instance of xs:integer", parser.InstanceofExpr()));
+        assertEquals(new InstanceOfExpr(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), new SequenceType(XS_INTEGER, OccurrenceIndicator.ZERO_OR_ONE)), parse("-123 instance of xs:integer?", parser.InstanceofExpr()));
+        assertEquals(new InstanceOfExpr(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)))), new SequenceType(XS_INT, OccurrenceIndicator.ONE_OR_MORE)), parse("123 instance of xs:int+", parser.InstanceofExpr()));
+        assertEquals(new TreatExpr(new CastableExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), new SingleType(XS_INT, false)), new SingleType(XS_INTEGER, false)), new SequenceType(XS_STRING, OccurrenceIndicator.ZERO_OR_MORE)), parse("-123 cast as xs:int castable as xs:integer treat as xs:string*", parser.InstanceofExpr()));
+        assertEquals(new TreatExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), new SingleType(XS_INT, false)), new SequenceType(XS_STRING, null)), parse("-123 cast as xs:int treat as xs:string", parser.InstanceofExpr()));
+        assertEquals(new TreatExpr(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), new SequenceType(XS_INTEGER, OccurrenceIndicator.ZERO_OR_ONE)), parse("-123 treat as xs:integer?", parser.InstanceofExpr()));
+        assertEquals(new TreatExpr(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)))), new SequenceType(XS_INTEGER, OccurrenceIndicator.ONE_OR_MORE)), parse("123 treat as xs:integer+", parser.InstanceofExpr()));
+        assertEquals(new CastableExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), new SingleType(XS_INT, false)), new SingleType(XS_INTEGER, false)), parse("-123 cast as xs:int castable as xs:integer", parser.InstanceofExpr()));
+        assertEquals(new CastableExpr(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), new SingleType(XS_INT, true)), parse("-123 castable as xs:int?", parser.InstanceofExpr()));
+        assertEquals(new CastableExpr(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)))), new SingleType(XS_STRING, false)), parse("123 castable as xs:string", parser.InstanceofExpr()));
+        assertEquals(new CastExpr(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), new SingleType(XS_INT, false)), parse("-123 cast as xs:int", parser.InstanceofExpr()));
+        assertEquals(new CastExpr(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)))), new SingleType(XS_INT, false)), parse("123 cast as xs:int", parser.InstanceofExpr()));
+        assertEquals(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), parse("-123", parser.InstanceofExpr()));
+        assertEquals(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)))), parse("123", parser.InstanceofExpr()));
     }
 
     @Test
     public void parseIntersectExceptExpr() {
         assertEquals(
                 new IntersectExceptExpr(
-                        new ValueExpr(new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY)),
-                        Arrays.asList(new IntersectExceptExpr.IntersectExceptOp(IntersectExceptExpr.IntersectExcept.INTERSECT, new ValueExpr(new FilterExpr(new VarRef(new QNameW("b")), PredicateList.EMPTY))))
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY)))),
+                        Arrays.asList(new IntersectExceptExpr.IntersectExceptOp(IntersectExceptExpr.IntersectExcept.INTERSECT, new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new VarRef(new QNameW("b")), PredicateList.EMPTY))))))
                 ),
                 parse("$a intersect $b", parser.IntersectExceptExpr())
         );
 
         assertEquals(
                 new IntersectExceptExpr(
-                        new ValueExpr(new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY)),
-                        Arrays.asList(new IntersectExceptExpr.IntersectExceptOp(IntersectExceptExpr.IntersectExcept.EXCEPT, new ValueExpr(new FilterExpr(new VarRef(new QNameW("b")), PredicateList.EMPTY))))
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY)))),
+                        Arrays.asList(new IntersectExceptExpr.IntersectExceptOp(IntersectExceptExpr.IntersectExcept.EXCEPT, new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new VarRef(new QNameW("b")), PredicateList.EMPTY))))))
                 ),
                 parse("$a except $b", parser.IntersectExceptExpr())
         );
 
         assertEquals(
                 new IntersectExceptExpr(
-                        new InstanceOfExpr(new TreatExpr(new CastableExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))), new SingleType(XS_INT, false)), new SingleType(XS_INTEGER, false)), new SequenceType(XS_STRING, OccurrenceIndicator.ZERO_OR_MORE)), new SequenceType(XS_STRING, OccurrenceIndicator.ZERO_OR_MORE)),
-                        Arrays.asList(new IntersectExceptExpr.IntersectExceptOp(IntersectExceptExpr.IntersectExcept.INTERSECT, new ValueExpr(new FilterExpr(new VarRef(new QNameW("b")), PredicateList.EMPTY))))
+                        new InstanceOfExpr(new TreatExpr(new CastableExpr(new CastExpr(new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY))))), new SingleType(XS_INT, false)), new SingleType(XS_INTEGER, false)), new SequenceType(XS_STRING, OccurrenceIndicator.ZERO_OR_MORE)), new SequenceType(XS_STRING, OccurrenceIndicator.ZERO_OR_MORE)),
+                        Arrays.asList(new IntersectExceptExpr.IntersectExceptOp(IntersectExceptExpr.IntersectExcept.INTERSECT, new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new VarRef(new QNameW("b")), PredicateList.EMPTY))))))
                 ),
                 parse("-123 cast as xs:int castable as xs:integer treat as xs:string* instance of xs:string* intersect $b", parser.IntersectExceptExpr())
         );
@@ -436,10 +462,10 @@ public class XPathParserTest {
     public void parseUnionExpr() {
         assertEquals(
                 new UnionExpr(
-                        new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)),
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)))),
                         Arrays.asList(
-                            new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY)),
-                            new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("c"))), PredicateList.EMPTY))
+                            new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY)))),
+                            new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("c"))), PredicateList.EMPTY))))
                         )
                 ),
                 parse("a union b union c", parser.UnionExpr())
@@ -448,25 +474,25 @@ public class XPathParserTest {
         assertEquals(
                 new UnionExpr(
                     new IntersectExceptExpr(
-                        new ValueExpr(new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY)),
-                        Arrays.asList(new IntersectExceptExpr.IntersectExceptOp(IntersectExceptExpr.IntersectExcept.EXCEPT, new ValueExpr(new FilterExpr(new VarRef(new QNameW("b")), PredicateList.EMPTY))))
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY)))),
+                        Arrays.asList(new IntersectExceptExpr.IntersectExceptOp(IntersectExceptExpr.IntersectExcept.EXCEPT, new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new VarRef(new QNameW("b")), PredicateList.EMPTY))))))
                     ),
-                    Arrays.asList(new ValueExpr(new FilterExpr(new VarRef(new QNameW("c")), PredicateList.EMPTY)))
+                    Arrays.asList(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new VarRef(new QNameW("c")), PredicateList.EMPTY)))))
                 ),
                 parse("$a except $b union $c", parser.UnionExpr())
         );
 
-        assertEquals(new ValueExpr(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)), parse("123", parser.UnionExpr()));
+        assertEquals(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("123"), PredicateList.EMPTY)))), parse("123", parser.UnionExpr()));
     }
 
     @Test
     public void parseMultiplicativeExpr() {
         assertEquals(
                 new MultiplicativeExpr(
-                    new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)),
+                    new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)))),
                     Arrays.asList(
-                            new MultiplicativeExpr.MultiplicativeOp(MultiplicativeExpr.Multiplicative.MULTIPLY, new ValueExpr(new FilterExpr(new IntegerLiteral("2"), PredicateList.EMPTY))),
-                            new MultiplicativeExpr.MultiplicativeOp(MultiplicativeExpr.Multiplicative.DIVIDE, new ValueExpr(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY)))
+                            new MultiplicativeExpr.MultiplicativeOp(MultiplicativeExpr.Multiplicative.MULTIPLY, new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("2"), PredicateList.EMPTY))))),
+                            new MultiplicativeExpr.MultiplicativeOp(MultiplicativeExpr.Multiplicative.DIVIDE, new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY)))))
                     )
                 ),
                 parse("1 * 2 div 3", parser.MultiplicativeExpr())
@@ -474,9 +500,9 @@ public class XPathParserTest {
 
         assertEquals(
                 new MultiplicativeExpr(
-                        new CastExpr(new ValueExpr(new FilterExpr(new DecimalLiteral("1.1"), PredicateList.EMPTY)), new SingleType(XS_INTEGER, false)),
+                        new CastExpr(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new DecimalLiteral("1.1"), PredicateList.EMPTY)))), new SingleType(XS_INTEGER, false)),
                         Arrays.asList(
-                                new MultiplicativeExpr.MultiplicativeOp(MultiplicativeExpr.Multiplicative.INTEGER_DIVIDE, new ValueExpr(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY)))
+                                new MultiplicativeExpr.MultiplicativeOp(MultiplicativeExpr.Multiplicative.INTEGER_DIVIDE, new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY)))))
                         )
                 ),
                 parse("1.1 cast as xs:integer idiv 3", parser.MultiplicativeExpr())
@@ -487,10 +513,10 @@ public class XPathParserTest {
     public void parseAdditiveExpr() {
         assertEquals(
                 new AdditiveExpr(
-                        new ValueExpr(new FilterExpr(new DecimalLiteral("1.2"), PredicateList.EMPTY)),
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new DecimalLiteral("1.2"), PredicateList.EMPTY)))),
                         Arrays.asList(
-                                new AdditiveExpr.AdditiveOp(AdditiveExpr.Additive.ADD, new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))),
-                                new AdditiveExpr.AdditiveOp(AdditiveExpr.Additive.SUBTRACT, new ValueExpr(new FilterExpr(new DoubleLiteral("1.9E2"), PredicateList.EMPTY)))
+                                new AdditiveExpr.AdditiveOp(AdditiveExpr.Additive.ADD, new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))))),
+                                new AdditiveExpr.AdditiveOp(AdditiveExpr.Additive.SUBTRACT, new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new DoubleLiteral("1.9E2"), PredicateList.EMPTY)))))
                         )
                 ),
                 parse("1.2 + 1 - 1.9E2", parser.AdditiveExpr())
@@ -498,12 +524,12 @@ public class XPathParserTest {
 
         assertEquals(
                 new AdditiveExpr(
-                        new ValueExpr(new FilterExpr(new DecimalLiteral("1.2"), PredicateList.EMPTY)),
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new DecimalLiteral("1.2"), PredicateList.EMPTY)))),
                         Arrays.asList(
                                 new AdditiveExpr.AdditiveOp(AdditiveExpr.Additive.ADD, new MultiplicativeExpr(
-                                        new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)),
+                                        new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)))),
                                         Arrays.asList(
-                                                new MultiplicativeExpr.MultiplicativeOp(MultiplicativeExpr.Multiplicative.MULTIPLY, new UnaryExpr("-", new ValueExpr(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY))))
+                                                new MultiplicativeExpr.MultiplicativeOp(MultiplicativeExpr.Multiplicative.MULTIPLY, new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY))))))
                                         )
                                 ))
                         )
@@ -516,19 +542,19 @@ public class XPathParserTest {
     public void parseRangeExpr() {
         assertEquals(
                 new RangeExpr(
-                        new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)),
-                        new ValueExpr(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY))
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)))),
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY))))
                 ),
                 parse("1 to 3", parser.RangeExpr())
         );
 
         assertEquals(
                 new RangeExpr(
-                        new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)),
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)))),
                         new AdditiveExpr(
-                                new ValueExpr(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY)),
+                                new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY)))),
                                 Arrays.asList(
-                                        new AdditiveExpr.AdditiveOp(AdditiveExpr.Additive.ADD, new CastExpr(new ValueExpr(new FilterExpr(new IntegerLiteral("9"), PredicateList.EMPTY)), new SingleType(XS_INTEGER, false)))
+                                        new AdditiveExpr.AdditiveOp(AdditiveExpr.Additive.ADD, new CastExpr(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("9"), PredicateList.EMPTY)))), new SingleType(XS_INTEGER, false)))
                                 )
                         )
                 ),
@@ -567,40 +593,40 @@ public class XPathParserTest {
     public void parseComparisonExpr() {
         assertEquals(
                 new ComparisonExpr(
-                        new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)),
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)))),
                         ValueComp.EQUAL,
-                        new ValueExpr(new FilterExpr(new IntegerLiteral("2"), PredicateList.EMPTY))
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("2"), PredicateList.EMPTY))))
                 ),
                 parse("1 eq 2", parser.ComparisonExpr())
         );
 
         assertEquals(
                 new ComparisonExpr(
-                        new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY)),
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY)))),
                         GeneralComp.EQUAL,
-                        new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY))
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY))))
                 ),
                 parse("b = a", parser.ComparisonExpr())
         );
 
         assertEquals(
                 new ComparisonExpr(
-                        new ValueExpr(new FilterExpr(new ParenthesizedExpr(new Expr(Arrays.asList(
-                                new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)),
-                                new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY)),
-                                new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("c"))), PredicateList.EMPTY))
-                        ))), PredicateList.EMPTY)),
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new ParenthesizedExpr(new Expr(Arrays.asList(
+                                new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)))),
+                                new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY)))),
+                                new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("c"))), PredicateList.EMPTY))))
+                        ))), PredicateList.EMPTY)))),
                         GeneralComp.EQUAL,
-                        new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY))
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY))))
                 ),
                 parse("(a, b, c) = a", parser.ComparisonExpr())
         );
 
         assertEquals(
                 new ComparisonExpr(
-                        new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)),
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)))),
                         NodeComp.PRECEDES,
-                        new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY))
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY))))
                 ),
                 parse("a << b", parser.ComparisonExpr())
         );
@@ -609,19 +635,19 @@ public class XPathParserTest {
     @Test
     public void parseParenthesizedExpr() {
         assertEquals(null, parse("()", parser.ParenthesizedExpr()));
-        assertEquals(new ParenthesizedExpr(new Expr(Arrays.asList(new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY))))), parse("(a)", parser.ParenthesizedExpr()));
+        assertEquals(new ParenthesizedExpr(new Expr(Arrays.asList(new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY))))))), parse("(a)", parser.ParenthesizedExpr()));
         assertEquals(
                 new ParenthesizedExpr(new Expr(Arrays.asList(new RangeExpr(
-                        new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)),
-                        new ValueExpr(new FilterExpr(new IntegerLiteral("10"), PredicateList.EMPTY))
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)))),
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("10"), PredicateList.EMPTY))))
                 )))),
                 parse("(1 to 10)", parser.ParenthesizedExpr())
         );
         assertEquals(
                 new ParenthesizedExpr(
                         new Expr(Arrays.asList(
-                                new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)),
-                                new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY))
+                                new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)))),
+                                new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY))))
                         ))
                 ),
                 parse("(a, b)", parser.ParenthesizedExpr())
@@ -630,11 +656,11 @@ public class XPathParserTest {
         assertEquals(
                 new ParenthesizedExpr(
                         new Expr(Arrays.asList(
-                                new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)),
-                                new ValueExpr(new FilterExpr(new ParenthesizedExpr(new Expr(Arrays.asList(
-                                        new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY)),
-                                        new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("c"))), PredicateList.EMPTY))
-                                ))), PredicateList.EMPTY))
+                                new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)))),
+                                new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new ParenthesizedExpr(new Expr(Arrays.asList(
+                                        new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY)))),
+                                        new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("c"))), PredicateList.EMPTY))))
+                                ))), PredicateList.EMPTY))))
                         ))
                 ),
                 parse("(a, (b, c))", parser.ParenthesizedExpr())
@@ -645,9 +671,9 @@ public class XPathParserTest {
     public void parseAndExpr() {
         assertEquals(
                 new AndExpr(
-                        new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)),
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)))),
                         Arrays.asList(
-                                new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY))
+                                new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY))))
                         )
                 ),
                 parse("a and b", parser.AndExpr())
@@ -655,10 +681,10 @@ public class XPathParserTest {
 
         assertEquals(
                 new AndExpr(
-                        new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)),
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)))),
                         Arrays.asList(
-                                new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY)),
-                                new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("c"))), PredicateList.EMPTY))
+                                new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY)))),
+                                new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("c"))), PredicateList.EMPTY))))
                         )
                 ),
                 parse("a and b and c", parser.AndExpr())
@@ -669,9 +695,9 @@ public class XPathParserTest {
     public void parseOrExpr() {
         assertEquals(
                 new OrExpr(
-                        new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)),
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)))),
                         Arrays.asList(
-                                new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY))
+                                new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY))))
                         )
                 ),
                 parse("a or b", parser.OrExpr())
@@ -679,17 +705,127 @@ public class XPathParserTest {
 
         assertEquals(
                 new OrExpr(
-                        new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)),
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)))),
                         Arrays.asList(
                                 new AndExpr(
-                                        new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY)),
+                                        new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY)))),
                                         Arrays.asList(
-                                                new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("c"))), PredicateList.EMPTY))
+                                                new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("c"))), PredicateList.EMPTY))))
                                         )
                                 )
                         )
                 ),
                 parse("a or b and c", parser.OrExpr())
+        );
+    }
+
+    @Test
+    public void parseIfExpr() {
+        assertEquals(
+                new IfExpr(
+                        new Expr(Arrays.asList(new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(FN_TRUE, PredicateList.EMPTY)))))),
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)))),
+                        new UnaryExpr("-", new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)))))
+                ),
+                parse("if (true()) then 1 else -1", parser.IfExpr())
+        );
+    }
+
+    @Test
+    public void parseQuantifiedExpr() {
+        assertEquals(
+                new QuantifiedExpr(
+                        QuantifiedExpr.Quantifier.SOME,
+                        Arrays.asList(new QuantifiedExpr.InClause(new QNameW("a"), new ValueExpr(new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)))))),
+                        new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new FunctionCall(new QNameW("starts-with"), Arrays.asList(
+                                new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY)))),
+                                new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new StringLiteral("X"), PredicateList.EMPTY)))))
+                        ), PredicateList.EMPTY))))
+                ),
+                parse("some $a in /a satisfies starts-with($a, 'X')", parser.QuantifiedExpr())
+        );
+
+        assertEquals(
+                new QuantifiedExpr(
+                        QuantifiedExpr.Quantifier.EVERY,
+                        Arrays.asList(
+                            new QuantifiedExpr.InClause(new QNameW("a"), new ValueExpr(new RelativePathExpr(Arrays.asList(
+                                new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY),
+                                new AxisStep(new Step(Axis.ATTRIBUTE, new NameTest(new QNameW("id"))), PredicateList.EMPTY)
+                            )))),
+                            new QuantifiedExpr.InClause(new QNameW("b"), new ValueExpr(new RelativePathExpr(Arrays.asList(
+                                    new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY),
+                                    new AxisStep(new Step(Axis.ATTRIBUTE, new NameTest(new QNameW("id"))), PredicateList.EMPTY)
+                            ))))
+                        ),
+                        new ComparisonExpr(
+                                new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY)))),
+                                ValueComp.EQUAL,
+                                new ValueExpr(new RelativePathExpr(Arrays.asList(new FilterExpr(new VarRef(new QNameW("b")), PredicateList.EMPTY))))
+                        )
+                ),
+                parse("every $a in /a/@id, $b in /b/@id satisfies $a eq $b", parser.QuantifiedExpr())
+        );
+    }
+
+    @Test
+    public void parseRelativePathExpr() {
+        assertEquals(
+                new RelativePathExpr(Arrays.asList(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY))),
+                parse("a", parser.RelativePathExpr())
+        );
+
+        assertEquals(
+                new RelativePathExpr(Arrays.asList(
+                        new AxisStep(new Step(Axis.ATTRIBUTE, new NameTest(new QNameW("a"))), PredicateList.EMPTY))
+                ),
+                parse("@a", parser.RelativePathExpr())
+        );
+
+        assertEquals(
+                new RelativePathExpr(Arrays.asList(
+                        new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY),
+                        new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY)
+                )),
+                parse("a/b", parser.RelativePathExpr())
+        );
+
+        assertEquals(
+                new RelativePathExpr(Arrays.asList(
+                        new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY),
+                        new AxisStep(new Step(Axis.ATTRIBUTE, new NameTest(new QNameW("b"))), PredicateList.EMPTY)
+                )),
+                parse("a/@b", parser.RelativePathExpr())
+        );
+
+        assertEquals(
+                new RelativePathExpr(Arrays.asList(
+                        new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY),
+                        AxisStep.SLASH_SLASH_ABBREV,
+                        new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY)
+                )),
+                parse("a//b", parser.RelativePathExpr())
+        );
+
+        assertEquals(
+                new RelativePathExpr(Arrays.asList(
+                        new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY),
+                        AxisStep.SLASH_SLASH_ABBREV,
+                        new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY),
+                        new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("c"))), PredicateList.EMPTY)
+                )),
+                parse("a//b/c", parser.RelativePathExpr())
+        );
+
+        assertEquals(
+                new RelativePathExpr(Arrays.asList(
+                        new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY),
+                        AxisStep.SLASH_SLASH_ABBREV,
+                        new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY),
+                        AxisStep.SLASH_SLASH_ABBREV,
+                        new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("c"))), PredicateList.EMPTY)
+                )),
+                parse("a//b//c", parser.RelativePathExpr())
         );
     }
 

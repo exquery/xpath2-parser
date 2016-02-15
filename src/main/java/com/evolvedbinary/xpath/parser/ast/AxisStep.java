@@ -22,9 +22,11 @@ package com.evolvedbinary.xpath.parser.ast;
 /**
  * Created by aretter on 28/01/2016.
  */
-public class AxisStep extends AbstractASTNode {
+public class AxisStep extends AbstractASTNode implements StepExpr {
     private Step step;
     private PredicateList predicateList;
+
+    public static AxisStep SLASH_SLASH_ABBREV = new AxisStep(new Step(Axis.DESCENDANT_OR_SELF, AnyKindTest.instance()), PredicateList.EMPTY);
 
     public AxisStep(final Step step, final PredicateList predicateList) {
         this.step = step;
