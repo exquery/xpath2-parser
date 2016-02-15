@@ -20,28 +20,27 @@
 package com.evolvedbinary.xpath.parser.ast.partial;
 
 import com.evolvedbinary.xpath.parser.ast.AbstractOperand;
-import com.evolvedbinary.xpath.parser.ast.UnionExpr;
+import com.evolvedbinary.xpath.parser.ast.OrExpr;
 
 import java.util.List;
 
 /**
- * Created by aretter on 12/02/2016.
+ * Created by aretter on 15/02/2016.
  */
-public class PartialUnionExpr extends AbstractPartialASTNode<UnionExpr, List<AbstractOperand>> {
+public class PartialOrExpr extends AbstractPartialASTNode<OrExpr, List<AbstractOperand>> {
     private final AbstractOperand operand;
 
-    public PartialUnionExpr(final AbstractOperand operand) {
+    public PartialOrExpr(final AbstractOperand operand) {
         this.operand = operand;
     }
 
-
     @Override
     protected String describe() {
-        return "UnionExpr(" + operand + ", ?...)";
+        return "OrExpr(" + operand + ", ?...)";
     }
 
     @Override
-    public UnionExpr complete(final List<AbstractOperand> unionOps) {
-        return new UnionExpr(operand, unionOps);
+    public OrExpr complete(final List<AbstractOperand> orOps) {
+        return new OrExpr(operand, orOps);
     }
 }

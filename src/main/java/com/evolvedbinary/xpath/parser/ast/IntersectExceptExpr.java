@@ -24,7 +24,7 @@ import java.util.List;
 /**
  * Created by aretter on 12/02/2016.
  */
-public class IntersectExceptExpr extends AbstractOperand {
+public class IntersectExceptExpr extends AbstractOperandWithOps<IntersectExceptExpr.IntersectExceptOp> {
 
     public enum IntersectExcept {
         INTERSECT("intersect"),
@@ -70,35 +70,16 @@ public class IntersectExceptExpr extends AbstractOperand {
         }
     }
 
-    private final AbstractOperand operand;
-    private final List<IntersectExceptOp> interceptExceptOps;
-
     public IntersectExceptExpr(final AbstractOperand operand, final List<IntersectExceptOp> interceptExceptOps) {
-        this.operand = operand;
-        this.interceptExceptOps = interceptExceptOps;
+        super(operand, interceptExceptOps);
     }
 
     @Override
-    protected String describe() {
-        final StringBuilder builder = new StringBuilder();
-        for(final IntersectExceptOp interceptExceptOp : interceptExceptOps) {
+    protected void describeOp(final StringBuilder builder, final IntersectExceptOp intersectExceptOp) {
             builder
                     .append(" ")
-                    .append(interceptExceptOp.intersectExcept)
+                    .append(intersectExceptOp.intersectExcept)
                     .append(" ")
-                    .append(interceptExceptOp.operand);
-        }
-        return "IntersectExceptExpr(" + operand + builder.toString() + ")";
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if(obj != null && obj instanceof IntersectExceptExpr) {
-            final IntersectExceptExpr other = (IntersectExceptExpr)obj;
-            return other.operand.equals(operand)
-                    && other.interceptExceptOps.equals(interceptExceptOps);
-        }
-
-        return false;
+                    .append(intersectExceptOp.operand);
     }
 }

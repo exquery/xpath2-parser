@@ -17,31 +17,23 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-package com.evolvedbinary.xpath.parser.ast.partial;
-
-import com.evolvedbinary.xpath.parser.ast.AbstractOperand;
-import com.evolvedbinary.xpath.parser.ast.UnionExpr;
+package com.evolvedbinary.xpath.parser.ast;
 
 import java.util.List;
 
 /**
- * Created by aretter on 12/02/2016.
+ * Created by aretter on 15/02/2016.
  */
-public class PartialUnionExpr extends AbstractPartialASTNode<UnionExpr, List<AbstractOperand>> {
-    private final AbstractOperand operand;
+public class OrExpr extends AbstractOperandWithOps<AbstractOperand> implements ExprSingle {
 
-    public PartialUnionExpr(final AbstractOperand operand) {
-        this.operand = operand;
-    }
-
-
-    @Override
-    protected String describe() {
-        return "UnionExpr(" + operand + ", ?...)";
+    public OrExpr(final AbstractOperand operand, final List<? extends AbstractOperand> orOps) {
+        super(operand, orOps);
     }
 
     @Override
-    public UnionExpr complete(final List<AbstractOperand> unionOps) {
-        return new UnionExpr(operand, unionOps);
+    protected void describeOp(final StringBuilder builder, final AbstractOperand orOp) {
+        builder
+                .append(" or ")
+                .append(orOp);
     }
 }

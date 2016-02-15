@@ -25,9 +25,9 @@ import java.util.List;
  * Created by aretter on 14/02/2016.
  */
 public class Expr extends AbstractASTNode {
-    private final List<ASTNode> exprSingles;
+    private final List<? extends ASTNode> exprSingles;
 
-    public Expr(final List<ASTNode> exprSingles) {
+    public Expr(final List<? extends ASTNode> exprSingles) {
         this.exprSingles = exprSingles;
     }
 

@@ -233,19 +233,19 @@ public class XPathParserTest {
 
     @Test
     public void parsePredicate() {
-        assertEquals(new Predicate(new Expr(Arrays.<ASTNode>asList(new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))))), parse("[1]", parser.Predicate()));
-        assertEquals(new Predicate(new Expr(Arrays.<ASTNode>asList(new ValueExpr(new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY))))), parse("[$a]", parser.Predicate()));
-        assertEquals(new Predicate(new Expr(Arrays.<ASTNode>asList(new ValueExpr(new FilterExpr(new FunctionCall(new QNameW("true"), Collections.<AbstractASTNode>emptyList()), PredicateList.EMPTY))))), parse("[true()]", parser.Predicate()));
+        assertEquals(new Predicate(new Expr(Arrays.asList(new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))))), parse("[1]", parser.Predicate()));
+        assertEquals(new Predicate(new Expr(Arrays.asList(new ValueExpr(new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY))))), parse("[$a]", parser.Predicate()));
+        assertEquals(new Predicate(new Expr(Arrays.asList(new ValueExpr(new FilterExpr(new FunctionCall(new QNameW("true"), Collections.<AbstractASTNode>emptyList()), PredicateList.EMPTY))))), parse("[true()]", parser.Predicate()));
     }
 
     @Test
     public void parsePredicateList() {
-        assertEquals(new PredicateList(Arrays.asList(new Predicate(new Expr(Arrays.<ASTNode>asList(new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))))))), parse("[1]", parser.PredicateList()));
+        assertEquals(new PredicateList(Arrays.asList(new Predicate(new Expr(Arrays.asList(new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))))))), parse("[1]", parser.PredicateList()));
         assertEquals(
                 new PredicateList(Arrays.asList(
-                        new Predicate(new Expr(Arrays.<ASTNode>asList(new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))))),
-                        new Predicate(new Expr(Arrays.<ASTNode>asList(new ValueExpr(new FilterExpr(new IntegerLiteral("2"), PredicateList.EMPTY))))),
-                        new Predicate(new Expr(Arrays.<ASTNode>asList(new ValueExpr(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY)))))
+                        new Predicate(new Expr(Arrays.asList(new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))))),
+                        new Predicate(new Expr(Arrays.asList(new ValueExpr(new FilterExpr(new IntegerLiteral("2"), PredicateList.EMPTY))))),
+                        new Predicate(new Expr(Arrays.asList(new ValueExpr(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY)))))
                 )),
                 parse("[1][2][3]", parser.PredicateList())
         );
@@ -255,9 +255,9 @@ public class XPathParserTest {
     public void parseFunctionCall() {
         assertEquals(new FunctionCall(new QNameW("true"), Collections.<AbstractASTNode>emptyList()), parse("true()", parser.FunctionCall()));
         assertEquals(new FunctionCall(new QNameW("false"), Collections.<AbstractASTNode>emptyList()), parse("false()", parser.FunctionCall()));
-        assertEquals(new FunctionCall(new QNameW("local", "hello"), Arrays.<AbstractASTNode>asList(new ValueExpr(new FilterExpr(new StringLiteral("world"), PredicateList.EMPTY)))), parse("local:hello(\"world\")", parser.FunctionCall()));
-        assertEquals(new FunctionCall(new QNameW("local", "hello"), Arrays.<AbstractASTNode>asList(new ValueExpr(new FilterExpr(new StringLiteral("world"), PredicateList.EMPTY)), new ValueExpr(new FilterExpr(new StringLiteral("again"), PredicateList.EMPTY)))), parse("local:hello(\"world\", \"again\")", parser.FunctionCall()));
-        assertEquals(new FunctionCall(new QNameW("other"), Arrays.<AbstractASTNode>asList(new ValueExpr(new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY)))), parse("other($a)", parser.FunctionCall()));
+        assertEquals(new FunctionCall(new QNameW("local", "hello"), Arrays.asList(new ValueExpr(new FilterExpr(new StringLiteral("world"), PredicateList.EMPTY)))), parse("local:hello(\"world\")", parser.FunctionCall()));
+        assertEquals(new FunctionCall(new QNameW("local", "hello"), Arrays.asList(new ValueExpr(new FilterExpr(new StringLiteral("world"), PredicateList.EMPTY)), new ValueExpr(new FilterExpr(new StringLiteral("again"), PredicateList.EMPTY)))), parse("local:hello(\"world\", \"again\")", parser.FunctionCall()));
+        assertEquals(new FunctionCall(new QNameW("other"), Arrays.asList(new ValueExpr(new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY)))), parse("other($a)", parser.FunctionCall()));
     }
 
     @Test
@@ -272,7 +272,7 @@ public class XPathParserTest {
                 new FilterExpr(
                         ContextItemExpr.instance(),
                         new PredicateList(Arrays.asList(
-                                new Predicate(new Expr(Arrays.<ASTNode>asList(new ValueExpr(new AxisStep(
+                                new Predicate(new Expr(Arrays.asList(new ValueExpr(new AxisStep(
                                         new Step(Axis.CHILD, new NameTest(new QNameW("a"))),
                                         PredicateList.EMPTY))
                                 )))
@@ -290,9 +290,9 @@ public class XPathParserTest {
                 new AxisStep(
                         new Step(Axis.CHILD, new NameTest(new QNameW("a"))),
                         new PredicateList(Arrays.asList(
-                                new Predicate(new Expr(Arrays.<ASTNode>asList(new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))))),
-                                new Predicate(new Expr(Arrays.<ASTNode>asList(new ValueExpr(new FilterExpr(new IntegerLiteral("2"), PredicateList.EMPTY))))),
-                                new Predicate(new Expr(Arrays.<ASTNode>asList(new ValueExpr(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY))))))
+                                new Predicate(new Expr(Arrays.asList(new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY))))),
+                                new Predicate(new Expr(Arrays.asList(new ValueExpr(new FilterExpr(new IntegerLiteral("2"), PredicateList.EMPTY))))),
+                                new Predicate(new Expr(Arrays.asList(new ValueExpr(new FilterExpr(new IntegerLiteral("3"), PredicateList.EMPTY))))))
                         )
                 ),
                 parse("a[1][2][3]", parser.AxisStep())
@@ -302,8 +302,8 @@ public class XPathParserTest {
                 new AxisStep(
                         new Step(Axis.CHILD, new NameTest(new QNameW("a"))),
                         new PredicateList(Arrays.asList(
-                                new Predicate(new Expr(Arrays.<ASTNode>asList(new ValueExpr(new FilterExpr(new FunctionCall(new QNameW("true"), Collections.<AbstractASTNode>emptyList()), PredicateList.EMPTY))))),
-                                new Predicate(new Expr(Arrays.<ASTNode>asList(new ValueExpr(new FilterExpr(new FunctionCall(new QNameW("false"), Collections.<AbstractASTNode>emptyList()), PredicateList.EMPTY)))))))
+                                new Predicate(new Expr(Arrays.asList(new ValueExpr(new FilterExpr(new FunctionCall(new QNameW("true"), Collections.<AbstractASTNode>emptyList()), PredicateList.EMPTY))))),
+                                new Predicate(new Expr(Arrays.asList(new ValueExpr(new FilterExpr(new FunctionCall(new QNameW("false"), Collections.<AbstractASTNode>emptyList()), PredicateList.EMPTY)))))))
                 ),
                 parse("a[true()][false()]", parser.AxisStep())
         );
@@ -437,7 +437,7 @@ public class XPathParserTest {
         assertEquals(
                 new UnionExpr(
                         new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)),
-                        Arrays.<AbstractOperand>asList(
+                        Arrays.asList(
                             new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY)),
                             new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("c"))), PredicateList.EMPTY))
                         )
@@ -451,7 +451,7 @@ public class XPathParserTest {
                         new ValueExpr(new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY)),
                         Arrays.asList(new IntersectExceptExpr.IntersectExceptOp(IntersectExceptExpr.IntersectExcept.EXCEPT, new ValueExpr(new FilterExpr(new VarRef(new QNameW("b")), PredicateList.EMPTY))))
                     ),
-                    Arrays.<AbstractOperand>asList(new ValueExpr(new FilterExpr(new VarRef(new QNameW("c")), PredicateList.EMPTY)))
+                    Arrays.asList(new ValueExpr(new FilterExpr(new VarRef(new QNameW("c")), PredicateList.EMPTY)))
                 ),
                 parse("$a except $b union $c", parser.UnionExpr())
         );
@@ -585,7 +585,7 @@ public class XPathParserTest {
 
         assertEquals(
                 new ComparisonExpr(
-                        new ValueExpr(new FilterExpr(new ParenthesizedExpr(new Expr(Arrays.<ASTNode>asList(
+                        new ValueExpr(new FilterExpr(new ParenthesizedExpr(new Expr(Arrays.asList(
                                 new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)),
                                 new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY)),
                                 new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("c"))), PredicateList.EMPTY))
@@ -609,9 +609,9 @@ public class XPathParserTest {
     @Test
     public void parseParenthesizedExpr() {
         assertEquals(null, parse("()", parser.ParenthesizedExpr()));
-        assertEquals(new ParenthesizedExpr(new Expr(Arrays.<ASTNode>asList(new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY))))), parse("(a)", parser.ParenthesizedExpr()));
+        assertEquals(new ParenthesizedExpr(new Expr(Arrays.asList(new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY))))), parse("(a)", parser.ParenthesizedExpr()));
         assertEquals(
-                new ParenthesizedExpr(new Expr(Arrays.<ASTNode>asList(new RangeExpr(
+                new ParenthesizedExpr(new Expr(Arrays.asList(new RangeExpr(
                         new ValueExpr(new FilterExpr(new IntegerLiteral("1"), PredicateList.EMPTY)),
                         new ValueExpr(new FilterExpr(new IntegerLiteral("10"), PredicateList.EMPTY))
                 )))),
@@ -619,12 +619,77 @@ public class XPathParserTest {
         );
         assertEquals(
                 new ParenthesizedExpr(
-                        new Expr(Arrays.<ASTNode>asList(
+                        new Expr(Arrays.asList(
                                 new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)),
                                 new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY))
                         ))
                 ),
                 parse("(a, b)", parser.ParenthesizedExpr())
+        );
+
+        assertEquals(
+                new ParenthesizedExpr(
+                        new Expr(Arrays.asList(
+                                new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)),
+                                new ValueExpr(new FilterExpr(new ParenthesizedExpr(new Expr(Arrays.asList(
+                                        new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY)),
+                                        new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("c"))), PredicateList.EMPTY))
+                                ))), PredicateList.EMPTY))
+                        ))
+                ),
+                parse("(a, (b, c))", parser.ParenthesizedExpr())
+        );
+    }
+
+    @Test
+    public void parseAndExpr() {
+        assertEquals(
+                new AndExpr(
+                        new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)),
+                        Arrays.asList(
+                                new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY))
+                        )
+                ),
+                parse("a and b", parser.AndExpr())
+        );
+
+        assertEquals(
+                new AndExpr(
+                        new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)),
+                        Arrays.asList(
+                                new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY)),
+                                new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("c"))), PredicateList.EMPTY))
+                        )
+                ),
+                parse("a and b and c", parser.AndExpr())
+        );
+    }
+
+    @Test
+    public void parseOrExpr() {
+        assertEquals(
+                new OrExpr(
+                        new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)),
+                        Arrays.asList(
+                                new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY))
+                        )
+                ),
+                parse("a or b", parser.OrExpr())
+        );
+
+        assertEquals(
+                new OrExpr(
+                        new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)),
+                        Arrays.asList(
+                                new AndExpr(
+                                        new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY)),
+                                        Arrays.asList(
+                                                new ValueExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("c"))), PredicateList.EMPTY))
+                                        )
+                                )
+                        )
+                ),
+                parse("a or b and c", parser.OrExpr())
         );
     }
 

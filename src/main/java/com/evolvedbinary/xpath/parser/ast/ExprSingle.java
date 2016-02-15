@@ -22,5 +22,5 @@ package com.evolvedbinary.xpath.parser.ast;
 /**
  * Created by aretter on 11/02/2016.
  */
-public abstract class ExprSingle extends AbstractASTNode {
+public interface ExprSingle extends ASTNode {
 }

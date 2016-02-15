@@ -26,9 +26,9 @@ import java.util.List;
  */
 public class FunctionCall extends PrimaryExpr {
     final QNameW functionName;
-    final List<AbstractASTNode> arguments; //TODO(AR) should be ExprSingle?
+    final List<? extends ASTNode> arguments; //TODO(AR) should be ExprSingle?
 
-    public FunctionCall(final QNameW functionName, final List<AbstractASTNode> arguments) {
+    public FunctionCall(final QNameW functionName, final List<? extends ASTNode> arguments) {
         this.functionName = functionName;
         this.arguments = arguments;
     }
@@ -36,7 +36,7 @@ public class FunctionCall extends PrimaryExpr {
     @Override
     protected String describe() {
         final  StringBuilder builder = new StringBuilder();
-        for(final AbstractASTNode argument : arguments) {
+        for(final ASTNode argument : arguments) {
             if(builder.length() > 0) {
                 builder.append(", ");
             }

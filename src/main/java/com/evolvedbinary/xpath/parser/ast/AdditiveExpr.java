@@ -24,7 +24,7 @@ import java.util.List;
 /**
  * Created by aretter on 12/02/2016.
  */
-public class AdditiveExpr extends AbstractOperand {
+public class AdditiveExpr extends AbstractOperandWithOps<AdditiveExpr.AdditiveOp> {
 
     public enum Additive {
         ADD('+'),
@@ -69,35 +69,16 @@ public class AdditiveExpr extends AbstractOperand {
         }
     }
 
-    private final AbstractOperand operand;
-    private final List<AdditiveOp> additiveOps;
-
     public AdditiveExpr(final AbstractOperand operand, final List<AdditiveOp> additiveOps) {
-        this.operand = operand;
-        this.additiveOps = additiveOps;
+        super(operand, additiveOps);
     }
 
     @Override
-    protected String describe() {
-        final StringBuilder builder = new StringBuilder();
-        for(final AdditiveOp additiveOp : additiveOps) {
-            builder
-                    .append(" ")
-                    .append(additiveOp.additive)
-                    .append(" ")
-                    .append(additiveOp.operand);
-        }
-        return "AdditiveExpr(" + operand + builder.toString() + ")";
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if(obj != null && obj instanceof AdditiveExpr) {
-            final AdditiveExpr other = (AdditiveExpr)obj;
-            return other.operand.equals(operand)
-                    && other.additiveOps.equals(additiveOps);
-        }
-
-        return false;
+    protected void describeOp(final StringBuilder builder, final AdditiveOp additiveOp) {
+        builder
+                .append(" ")
+                .append(additiveOp.additive)
+                .append(" ")
+                .append(additiveOp.operand);
     }
 }

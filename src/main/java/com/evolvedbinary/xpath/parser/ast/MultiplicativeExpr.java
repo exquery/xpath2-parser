@@ -24,7 +24,7 @@ import java.util.List;
 /**
  * Created by aretter on 12/02/2016.
  */
-public class MultiplicativeExpr extends AbstractOperand {
+public class MultiplicativeExpr extends AbstractOperandWithOps<MultiplicativeExpr.MultiplicativeOp> {
 
     public enum Multiplicative {
         MULTIPLY("*"),
@@ -71,35 +71,16 @@ public class MultiplicativeExpr extends AbstractOperand {
         }
     }
 
-    private final AbstractOperand operand;
-    private final List<MultiplicativeOp> multiplicativeOps;
-
     public MultiplicativeExpr(final AbstractOperand operand, final List<MultiplicativeOp> multiplicativeOps) {
-        this.operand = operand;
-        this.multiplicativeOps = multiplicativeOps;
+        super(operand, multiplicativeOps);
     }
 
     @Override
-    protected String describe() {
-        final StringBuilder builder = new StringBuilder();
-        for(final MultiplicativeOp multiplicativeOp : multiplicativeOps) {
+    protected void describeOp(final StringBuilder builder, final MultiplicativeOp multiplicativeOp) {
             builder
                     .append(" ")
                     .append(multiplicativeOp.multiplicative)
                     .append(" ")
                     .append(multiplicativeOp.operand);
-        }
-        return "MultiplicativeExpr(" + operand + builder.toString() + ")";
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if(obj != null && obj instanceof MultiplicativeExpr) {
-            final MultiplicativeExpr other = (MultiplicativeExpr)obj;
-            return other.operand.equals(operand)
-                    && other.multiplicativeOps.equals(multiplicativeOps);
-        }
-
-        return false;
     }
 }

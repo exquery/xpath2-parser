@@ -24,34 +24,15 @@ import java.util.List;
 /**
  * Created by aretter on 12/02/2016.
  */
-public class UnionExpr extends AbstractOperand {
-    private final AbstractOperand operand;
-    private final List<AbstractOperand> unionOps;
-
-    public UnionExpr(final AbstractOperand operand, final List<AbstractOperand> unionOps) {
-        this.operand = operand;
-        this.unionOps = unionOps;
+public class UnionExpr extends AbstractOperandWithOps<AbstractOperand> {
+    public UnionExpr(final AbstractOperand operand, final List<? extends AbstractOperand> unionOps) {
+        super(operand, unionOps);
     }
 
     @Override
-    protected String describe() {
-        final StringBuilder builder = new StringBuilder();
-        for(final AbstractOperand unionOp : unionOps) {
-            builder
-                    .append(" union ")
-                    .append(unionOp);
-        }
-        return "UnionExpr(" + operand + builder.toString() + ")";
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if(obj != null && obj instanceof UnionExpr) {
-            final UnionExpr other = (UnionExpr)obj;
-            return other.operand.equals(operand)
-                    && other.unionOps.equals(unionOps);
-        }
-
-        return false;
+    protected void describeOp(final StringBuilder builder, final AbstractOperand unionOp) {
+        builder
+                .append(" union ")
+                .append(unionOp);
     }
 }

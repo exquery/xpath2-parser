@@ -32,6 +32,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+//TODO(AR) think about whether we can remove the use of org.parboiled.support.Var in favour of PartialASTNode, then we would have an immutable AST production
+
 @BuildParseTree
 public class XPathParser extends BaseParser<ASTNode> {
 
@@ -67,18 +69,6 @@ public class XPathParser extends BaseParser<ASTNode> {
         } else {
             return null;
         }
-    }
-
-    @Override
-    public boolean dup() {
-        if(enableActions) {
-            return super.dup();
-        } else {
-            return true;
-        }
-
-        //TODO(AR)
-        //getContext().getValueStack().peek()
     }
 
     <T> ASTNode complete(final T value, final ASTNode partial) {
@@ -214,14 +204,36 @@ public class XPathParser extends BaseParser<ASTNode> {
      * [8] OrExpr ::= AndExpr ( "or" AndExpr )*
      */
     Rule OrExpr() {
-        return Sequence(AndExpr(), ZeroOrMore(Sequence("or", WS(), AndExpr())));
+        final Var<List<AbstractOperand>> orOps = new Var<List<AbstractOperand>>(new ArrayList<AbstractOperand>());
+        return FirstOf(
+                Sequence(
+                        AndExpr(), push(new PartialOrExpr((AbstractOperand)pop())),
+                        OneOrMore(Sequence(
+                                "or",
+                                WS(),
+                                AndExpr(), ACTION(orOps.get().add((AbstractOperand)pop()))
+                        )), push(complete(orOps.get(), pop()))
+                ),
+                AndExpr()
+        );
     }
 
     /**
      * [9] AndExpr ::= ComparisonExpr ( "and" ComparisonExpr )*
      */
     Rule AndExpr() {
-        return Sequence(ComparisonExpr(), ZeroOrMore(Sequence("and", WS(), ComparisonExpr())));
+        final Var<List<AbstractOperand>> andOps = new Var<List<AbstractOperand>>(new ArrayList<AbstractOperand>());
+        return FirstOf(
+                Sequence(
+                        ComparisonExpr(), push(new PartialAndExpr((AbstractOperand)pop())),
+                        OneOrMore(Sequence(
+                                "and",
+                                WS(),
+                                ComparisonExpr(), ACTION(andOps.get().add((AbstractOperand)pop()))
+                        )), push(complete(andOps.get(), pop()))
+                ),
+                ComparisonExpr()
+        );
     }
 
     /**
@@ -232,13 +244,6 @@ public class XPathParser extends BaseParser<ASTNode> {
      * Value stack head either: ComparisonExpr / RangeExpr / AdditiveExpr / MultiplicativeExpr / UnionExpr / IntersectExceptExpr / InstanceOfExpr / TreatExpr / CastableExpr / CastExpr / UnaryExpr / ValueExpr
      */
     Rule ComparisonExpr() {
-//        return Sequence(
-//                RangeExpr(),
-//                Optional(Sequence(
-//                        FirstOf(ValueComp(), NodeComp(), GeneralComp()),
-//                        RangeExpr()
-//                ))
-//        );
         return FirstOf(
                 Sequence(
                         RangeExpr(), push(new PartialComparisonExpr((AbstractOperand)pop())),
@@ -255,7 +260,6 @@ public class XPathParser extends BaseParser<ASTNode> {
      * Value stack head either: RangeExpr / AdditiveExpr / MultiplicativeExpr / UnionExpr / IntersectExceptExpr / InstanceOfExpr / TreatExpr / CastableExpr / CastExpr / UnaryExpr / ValueExpr
      */
     Rule RangeExpr() {
-        //return Sequence(AdditiveExpr(), Optional(Sequence("to", WS(), AdditiveExpr())));
         return FirstOf(
                 Sequence(
                         AdditiveExpr(), push(new PartialRangeExpr((AbstractOperand)pop())),
@@ -274,7 +278,6 @@ public class XPathParser extends BaseParser<ASTNode> {
      * Value stack head either: AdditiveExpr / MultiplicativeExpr / UnionExpr / IntersectExceptExpr / InstanceOfExpr / TreatExpr / CastableExpr / CastExpr / UnaryExpr / ValueExpr
      */
     Rule AdditiveExpr() {
-        //return Sequence(MultiplicativeExpr(), ZeroOrMore(Sequence(FirstOf('+', '-'), WS(), MultiplicativeExpr())));
         final Var<List<AdditiveExpr.AdditiveOp>> additiveOps = new Var<List<AdditiveExpr.AdditiveOp>>(new ArrayList<AdditiveExpr.AdditiveOp>());
         final Var<AdditiveExpr.Additive> additive = new Var<AdditiveExpr.Additive>();
         return FirstOf(
@@ -297,7 +300,6 @@ public class XPathParser extends BaseParser<ASTNode> {
      * Value stack head either: MultiplicativeExpr / UnionExpr / IntersectExceptExpr / InstanceOfExpr / TreatExpr / CastableExpr / CastExpr / UnaryExpr / ValueExpr
      */
     Rule MultiplicativeExpr() {
-        //return Sequence(UnionExpr(), ZeroOrMore(Sequence(FirstOf('*', "idiv", "div", "mod"), WS(), UnionExpr())));
         final Var<List<MultiplicativeExpr.MultiplicativeOp>> multiplicativeOps = new Var<List<MultiplicativeExpr.MultiplicativeOp>>(new ArrayList<MultiplicativeExpr.MultiplicativeOp>());
         final Var<MultiplicativeExpr.Multiplicative> multiplicative = new Var<MultiplicativeExpr.Multiplicative>();
         return FirstOf(
@@ -320,10 +322,6 @@ public class XPathParser extends BaseParser<ASTNode> {
      * Value stack head either: UnionExpr / IntersectExceptExpr / InstanceOfExpr / TreatExpr / CastableExpr / CastExpr / UnaryExpr / ValueExpr
      */
     Rule UnionExpr() {
-//        return Sequence(
-//                IntersectExceptExpr(),
-//                ZeroOrMore(Sequence(FirstOf("union", '|'), WS(), IntersectExceptExpr()))
-//        );
         final Var<List<AbstractOperand>> unionOps = new Var<List<AbstractOperand>>(new ArrayList<AbstractOperand>());
         return FirstOf(
                 Sequence(
@@ -347,7 +345,6 @@ public class XPathParser extends BaseParser<ASTNode> {
      * Value stack head either: IntersectExceptExpr / InstanceOfExpr / TreatExpr / CastableExpr / CastExpr / UnaryExpr / ValueExpr
      */
     Rule IntersectExceptExpr() {
-        //return Sequence(InstanceofExpr(), ZeroOrMore(Sequence(FirstOf("intersect", "except"), WS(), InstanceofExpr())));
         final Var<List<IntersectExceptExpr.IntersectExceptOp>> intersectExceptOps = new Var<List<IntersectExceptExpr.IntersectExceptOp>>(new ArrayList<IntersectExceptExpr.IntersectExceptOp>());
         final Var<IntersectExceptExpr.IntersectExcept> intersectExcept = new Var<IntersectExceptExpr.IntersectExcept>();
         return FirstOf(
@@ -409,7 +406,6 @@ public class XPathParser extends BaseParser<ASTNode> {
                 Sequence(OneOrMore(FirstOf('-', '+')), push(new PartialUnaryExpr(match())), ValueExpr(), push(complete(pop(), pop()))),
                 ValueExpr()
         );
-        //return Sequence(ZeroOrMore('-', '+'), WS(), ValueExpr());
     }
 
     /**
@@ -689,7 +685,6 @@ public class XPathParser extends BaseParser<ASTNode> {
      * [48] FunctionCall ::= QName "(" (ExprSingle ("," ExprSingle)*)? ")"      //xgs:reserved-function-names
      */
     Rule FunctionCall() {
-        //final Var<List<ExprSingle>> arguments = new Var<List<ExprSingle>>(new ArrayList<ExprSingle>());
         //TODO(AR) should be ExprSingle?
         final Var<List<ASTNode>> arguments = new Var<List<ASTNode>>(new ArrayList<ASTNode>());
         return Sequence(
