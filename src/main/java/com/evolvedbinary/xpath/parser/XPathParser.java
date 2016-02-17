@@ -45,9 +45,8 @@ public class XPathParser extends BaseParser<ASTNode> {
         this.enableActions = enableActions;
     }
 
-    //TODO(AR) remove!
     @Override
-    public boolean push(ASTNode value) {
+    public boolean push(final ASTNode value) {
         if(enableActions) {
             return super.push(value);
         } else {
@@ -137,8 +136,8 @@ public class XPathParser extends BaseParser<ASTNode> {
      * Whitespace handling
      */
     Rule WS() {
-        //return Optional(FirstOf(Xml_S(), Comment()));
-        return Optional(Xml_S());
+        return Optional(FirstOf(Xml_S(), Comment()));
+        //return Optional(Xml_S());
     }
 
 
@@ -360,8 +359,6 @@ public class XPathParser extends BaseParser<ASTNode> {
                 IntersectExceptExpr()
         );
     }
-
-    //TODO consider making IntersectExceptExpr extend AbstractBinaryOperand which extends AbstractOperand
 
     /**
      * [15] IntersectExceptExpr ::= InstanceofExpr ( ("intersect" | "except") InstanceofExpr )*
