@@ -933,7 +933,7 @@ public class XPathParser extends BaseParser<ASTNode> {
     Rule DoubleLiteral() {
         return Sequence(
                 FirstOf(
-                        Sequence(push(new PartialDoubleLiteral("0")), '.', Digits(), push(complete(match(), pop()))),
+                        Sequence('.', push(new PartialDoubleLiteral("0")), Digits(), push(complete(match(), pop()))),
                         Sequence(Digits(), push(new PartialDoubleLiteral(match())), Sequence(Optional(Sequence('.', ZeroOrMore(CharRange('0', '9')))), push(complete(match().isEmpty() ? null : match().substring(1), pop()))))
                 ),
                 IgnoreCase('e'),
