@@ -23,21 +23,41 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Created by aretter on 15/02/2016.
+ * Created by aretter on 17/02/2016.
  */
-public class RelativePathExpr extends AbstractASTNode {
-    private final List<? extends StepExpr> steps;
+public class PathExpr extends AbstractASTNode  {
 
-    public RelativePathExpr(final List<? extends StepExpr> steps) {
+    private static TreatExpr ROOT = new TreatExpr(
+            new ValueExpr(new RelativePathExpr(new FilterExpr(new FunctionCall(new QNameW("fn", "root"), new ValueExpr(new RelativePathExpr(new AxisStep(new Step(Axis.SELF, AnyKindTest.instance()), PredicateList.EMPTY)))), PredicateList.EMPTY))),
+            new SequenceType(new DocumentTest(null), null)
+    );
+
+    public static StepExpr SLASH_ABBREV = new FilterExpr(
+            new ParenthesizedExpr(new Expr(
+                    ROOT
+            )),
+            PredicateList.EMPTY
+    );
+
+    public static StepExpr SLASH_SLASH_ABBREV = new FilterExpr(
+            new ParenthesizedExpr(new Expr(
+                    ROOT,
+                    new AxisStep(new Step(Axis.DESCENDANT_OR_SELF, AnyKindTest.instance()), PredicateList.EMPTY)
+            )),
+            PredicateList.EMPTY
+    );
+
+    private final List<? extends StepExpr> steps;
+    private final boolean relative;
+
+    public PathExpr(final boolean relative, final List<? extends StepExpr> steps) {
+        this.relative = relative;
         this.steps = steps;
     }
 
-    public RelativePathExpr(final StepExpr... steps) {
+    public PathExpr(final boolean relative, final StepExpr... steps) {
+        this.relative = relative;
         this.steps = Arrays.asList(steps);
-    }
-
-    public final List<? extends StepExpr> getSteps() {
-        return steps;
     }
 
     @Override
@@ -49,13 +69,15 @@ public class RelativePathExpr extends AbstractASTNode {
             }
             builder.append(step.toString());
         }
-        return "RelativePathExpr(" + builder.toString() + ")";
+        return "PathExpr(" + builder.toString() + ")";
     }
 
     @Override
     public boolean equals(final Object obj) {
-        if(obj != null && obj instanceof RelativePathExpr) {
-            return ((RelativePathExpr)obj).steps.equals(steps);
+        if(obj != null && obj instanceof PathExpr) {
+            final PathExpr other = (PathExpr)obj;
+            return other.relative == relative
+                    && other.steps.equals(steps);
         }
 
         return false;

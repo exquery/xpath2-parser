@@ -21,6 +21,7 @@ package com.evolvedbinary.xpath.parser;
 
 import com.evolvedbinary.functional.Either;
 import com.evolvedbinary.xpath.parser.ast.partial.*;
+import org.jetbrains.annotations.Nullable;
 import org.parboiled.BaseParser;
 import org.parboiled.Rule;
 import org.parboiled.annotations.BuildParseTree;
@@ -114,6 +115,22 @@ public class XPathParser extends BaseParser<ASTNode> {
         final List<T> items = popAll(type);
         Collections.reverse(items);
         return items;
+    }
+
+    /**
+     * Pops a node from the value stack if it is assignable
+     * from a specific class
+     *
+     * @param type The type of node to pop
+     * @return The node
+     */
+    <T extends ASTNode> T popIf(final Class<T> type) {
+        if(!getContext().getValueStack().isEmpty() &&
+                type.isAssignableFrom(peek().getClass())) {
+            return (T)pop();
+        }
+
+        return null;
     }
 
     /**
@@ -458,20 +475,44 @@ public class XPathParser extends BaseParser<ASTNode> {
      *                      | RelativePathExpr
      */
     Rule PathExpr() {
-        //TODO(AR) convert RelativePathExpr to PathExpr, or encapsulate PathExpr(RelativePathExpr)
+        //Converts RelativePathExpr to PathExpr
         return FirstOf(
                 Sequence(
                         "//",
                         WS(),
-                        RelativePathExpr()
+                        RelativePathExpr(), ACTION(push(relativePathToPath(PathExpr.SLASH_SLASH_ABBREV, (RelativePathExpr)pop())))
                 ),
                 Sequence(
                         '/',
                         WS(),
-                        Optional(RelativePathExpr())
+                        Optional(RelativePathExpr()), ACTION(push(relativePathToPath(PathExpr.SLASH_ABBREV, popIf(RelativePathExpr.class))))
                 ),
-                RelativePathExpr()
+                Sequence(RelativePathExpr(), ACTION(push(relativePathToPath(null, (RelativePathExpr)pop()))))
         );
+    }
+
+    /**
+     * Converts a Relative Path Expression to a Path Expression
+     *
+     * @param initialStep An initial step or null, if this Path Expression is still relative and not absolute
+     * @param relativePathExpr The RelativePathExpr or null if there is only an initial step, i.e. "/"
+     *
+     * @return The Path Expression
+     * @throws IllegalArgumentException if both initialStep and relativePathExpr are null
+     */
+    PathExpr relativePathToPath(@Nullable final StepExpr initialStep, @Nullable final RelativePathExpr relativePathExpr) {
+        if(initialStep == null && relativePathExpr == null) {
+            throw new IllegalArgumentException("Must provide initial step or relative path expression");
+        }
+
+        final List<StepExpr> steps = new ArrayList<StepExpr>();
+        if(initialStep != null) {
+            steps.add(initialStep);
+        }
+        if(relativePathExpr != null) {
+            steps.addAll(relativePathExpr.getSteps());
+        }
+        return new PathExpr(initialStep == null, steps);
     }
 
     /**
