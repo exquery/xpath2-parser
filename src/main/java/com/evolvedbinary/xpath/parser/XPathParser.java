@@ -1157,7 +1157,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *
      * [3] S ::= (#x20 | #x9 | #xD | #xA)+
      */
-    Rule Xml_S () {
+    Rule Xml_S() {
         return OneOrMore(AnyOf(new char[] {0x20, 0x9, 0xD, 0xA}));
     }
 
@@ -1183,7 +1183,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *
      * @param rule Any XPathParser rule
      *
-     * @return The rule followed by EOI
+     * @return The rule followed by an EOI rule
      */
     Rule withEOI(final Rule rule) {
         return Sequence(rule, EOI);
