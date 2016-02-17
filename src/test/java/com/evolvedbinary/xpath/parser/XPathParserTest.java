@@ -33,9 +33,7 @@ import org.parboiled.support.ParsingResult;
 import java.util.Arrays;
 import java.util.Collections;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.parboiled.errors.ErrorUtils.printParseErrors;
 
 public class XPathParserTest {
@@ -51,6 +49,35 @@ public class XPathParserTest {
 
     final boolean DEBUG = true;
     final XPathParser parser = Parboiled.createParser(XPathParser.class, Boolean.TRUE);
+
+    @Test
+    public void parseCommentContents() {
+        parse("this is a comment", parser.CommentContents());
+
+        boolean failed = false;
+        try {
+            parse("(: this is a comment", parser.CommentContents());
+        } catch(final AssertionError e) {
+            failed = true;
+        } finally {
+            assertTrue("CommentContents cannot start with \"(:\"", failed);
+        }
+
+        failed = false;
+        try {
+            parse("this is a comment :)", parser.CommentContents());
+        } catch(final AssertionError e) {
+            failed = true;
+        } finally {
+            assertTrue("CommentContents cannot end with \":)\"", failed);
+        }
+    }
+
+    @Test
+    public void parseComment() {
+        parse("(: this is a comment :)", parser.Comment());
+        parse("(: this is a (: nested comment :) :)", parser.Comment());
+    }
 
     @Test
     public void parseQName() {

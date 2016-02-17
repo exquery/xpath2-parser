@@ -1012,7 +1012,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      * [77] Comment ::= "(:" (CommentContents | Comment)* ":)"      //ws: explicit
      */
     Rule Comment() {
-        return Sequence("(:", WS(), ZeroOrMore(CommentContents(), Comment()), ":)", WS()); //TODO(AR) do we have this right
+        return Sequence("(:", WS(), ZeroOrMore(FirstOf(CommentContents(), Comment())), ":)", WS()); //TODO(AR) do we have this right
     }
 
     /**
@@ -1040,7 +1040,12 @@ public class XPathParser extends BaseParser<ASTNode> {
      * [82] CommentContents ::= (Char+ - (Char* ('(:' | ':)') Char*))
      */
     Rule CommentContents() {
-        return TestNot(FirstOf("(:", ":)")); //TODO(AR) do we have this right?
+//        return Sequence(
+//                OneOrMore(Xml_Char()),
+//                OneOrMore(TestNot(Sequence(ZeroOrMore(Xml_Char()), FirstOf("(:", ":)"), ZeroOrMore(Xml_Char()))), ANY)
+//        );
+
+        return OneOrMore(TestNot(FirstOf("(:", ":)")), Xml_Char()); //TODO(AR) do we have this right?
     }
 
 
