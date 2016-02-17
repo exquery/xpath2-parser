@@ -19,6 +19,7 @@
  */
 package com.evolvedbinary.xpath.parser.ast;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -29,6 +30,10 @@ public class Expr extends AbstractASTNode {
 
     public Expr(final List<? extends ASTNode> exprSingles) {
         this.exprSingles = exprSingles;
+    }
+
+    public Expr(final ASTNode... exprSingles) {
+        this.exprSingles = Arrays.asList(exprSingles);
     }
 
     @Override

@@ -19,6 +19,7 @@
  */
 package com.evolvedbinary.xpath.parser.ast;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -73,6 +74,10 @@ public class MultiplicativeExpr extends AbstractOperandWithOps<MultiplicativeExp
 
     public MultiplicativeExpr(final AbstractOperand operand, final List<MultiplicativeOp> multiplicativeOps) {
         super(operand, multiplicativeOps);
+    }
+
+    public MultiplicativeExpr(final AbstractOperand operand, final MultiplicativeOp... multiplicativeOps) {
+        super(operand, Arrays.asList(multiplicativeOps));
     }
 
     @Override

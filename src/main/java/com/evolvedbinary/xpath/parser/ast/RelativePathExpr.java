@@ -19,6 +19,7 @@
  */
 package com.evolvedbinary.xpath.parser.ast;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -29,6 +30,10 @@ public class RelativePathExpr extends AbstractASTNode {
 
     public RelativePathExpr(final List<? extends StepExpr> steps) {
         this.steps = steps;
+    }
+
+    public RelativePathExpr(final StepExpr... steps) {
+        this.steps = Arrays.asList(steps);
     }
 
     @Override

@@ -19,6 +19,7 @@
  */
 package com.evolvedbinary.xpath.parser.ast;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -72,6 +73,10 @@ public class IntersectExceptExpr extends AbstractOperandWithOps<IntersectExceptE
 
     public IntersectExceptExpr(final AbstractOperand operand, final List<IntersectExceptOp> interceptExceptOps) {
         super(operand, interceptExceptOps);
+    }
+
+    public IntersectExceptExpr(final AbstractOperand operand, final IntersectExceptOp... interceptExceptOps) {
+        super(operand, Arrays.asList(interceptExceptOps));
     }
 
     @Override

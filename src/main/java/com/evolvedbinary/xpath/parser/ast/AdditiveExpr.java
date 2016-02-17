@@ -19,6 +19,7 @@
  */
 package com.evolvedbinary.xpath.parser.ast;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -71,6 +72,10 @@ public class AdditiveExpr extends AbstractOperandWithOps<AdditiveExpr.AdditiveOp
 
     public AdditiveExpr(final AbstractOperand operand, final List<AdditiveOp> additiveOps) {
         super(operand, additiveOps);
+    }
+
+    public AdditiveExpr(final AbstractOperand operand, final AdditiveOp... additiveOps) {
+        super(operand, Arrays.asList(additiveOps));
     }
 
     @Override

@@ -19,6 +19,7 @@
  */
 package com.evolvedbinary.xpath.parser.ast;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -31,6 +32,11 @@ public class FunctionCall extends PrimaryExpr {
     public FunctionCall(final QNameW functionName, final List<? extends ASTNode> arguments) {
         this.functionName = functionName;
         this.arguments = arguments;
+    }
+
+    public FunctionCall(final QNameW functionName, final ASTNode... arguments) {
+        this.functionName = functionName;
+        this.arguments = Arrays.asList(arguments);
     }
 
     @Override

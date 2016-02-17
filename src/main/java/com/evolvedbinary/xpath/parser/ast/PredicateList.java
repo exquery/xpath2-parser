@@ -19,6 +19,7 @@
  */
 package com.evolvedbinary.xpath.parser.ast;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -32,6 +33,10 @@ public class PredicateList extends AbstractASTNode {
 
     public PredicateList(final List<Predicate> predicates) {
         this.predicates = predicates;
+    }
+
+    public PredicateList(final Predicate... predicates) {
+        this.predicates = Arrays.asList(predicates);
     }
 
     @Override

@@ -19,6 +19,7 @@
  */
 package com.evolvedbinary.xpath.parser.ast;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -28,6 +29,10 @@ public class AndExpr extends AbstractOperandWithOps<AbstractOperand> {
 
     public AndExpr(final AbstractOperand operand, final List<? extends AbstractOperand> andOps) {
         super(operand, andOps);
+    }
+
+    public AndExpr(final AbstractOperand operand, final AbstractOperand... andOps) {
+        super(operand, Arrays.asList(andOps));
     }
 
     @Override

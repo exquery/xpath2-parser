@@ -19,6 +19,7 @@
  */
 package com.evolvedbinary.xpath.parser.ast;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -27,6 +28,10 @@ import java.util.List;
 public class UnionExpr extends AbstractOperandWithOps<AbstractOperand> {
     public UnionExpr(final AbstractOperand operand, final List<? extends AbstractOperand> unionOps) {
         super(operand, unionOps);
+    }
+
+    public UnionExpr(final AbstractOperand operand, final AbstractOperand... unionOps) {
+        super(operand, Arrays.asList(unionOps));
     }
 
     @Override
