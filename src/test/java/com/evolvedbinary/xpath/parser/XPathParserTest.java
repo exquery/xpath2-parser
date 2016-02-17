@@ -26,6 +26,7 @@ import org.parboiled.Parboiled;
 import org.parboiled.Rule;
 import org.parboiled.parserunners.ParseRunner;
 import org.parboiled.parserunners.RecoveringParseRunner;
+import org.parboiled.support.Chars;
 import org.parboiled.support.ParseTreeUtils;
 import org.parboiled.support.ParsingResult;
 
@@ -175,7 +176,7 @@ public class XPathParserTest {
         assertEquals(Axis.CHILD, parse("child::", parser.ForwardAxis()));
         assertEquals(Axis.DESCENDANT, parse("descendant::", parser.ForwardAxis()));
         assertEquals(Axis.ATTRIBUTE, parse("attribute::", parser.ForwardAxis()));
-        assertEquals(Axis.SELF, parse("self::*", parser.ForwardAxis()));
+        assertEquals(Axis.SELF, parse("self::", parser.ForwardAxis()));
         assertEquals(Axis.DESCENDANT_OR_SELF, parse("descendant-or-self::", parser.ForwardAxis()));
         assertEquals(Axis.FOLLOWING_SIBLING, parse("following-sibling::", parser.ForwardAxis()));
         assertEquals(Axis.FOLLOWING, parse("following::", parser.ForwardAxis()));
@@ -842,7 +843,7 @@ public class XPathParserTest {
 
         assertEquals(
                 new PathExpr(false, PathExpr.SLASH_ABBREV),
-                parse("/@", parser.PathExpr())
+                parse("/", parser.PathExpr())
         );
 
         assertEquals(
@@ -908,8 +909,8 @@ public class XPathParserTest {
     }
 
     private ASTNode parse(final String xpath, final Rule rule) {
-        final ParseRunner<ASTNode> parseRunner = new RecoveringParseRunner(rule);
-        final ParsingResult<ASTNode> result = parseRunner.run(xpath);
+        final ParseRunner<ASTNode> parseRunner = new RecoveringParseRunner(parser.withEOI(rule));
+        final ParsingResult<ASTNode> result = parseRunner.run(xpath + Chars.EOI);
 
         if(DEBUG) {
             final String parseTreePrintOut = ParseTreeUtils.printNodeTree(result);

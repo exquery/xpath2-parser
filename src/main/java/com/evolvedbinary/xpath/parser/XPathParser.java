@@ -1155,4 +1155,32 @@ public class XPathParser extends BaseParser<ASTNode> {
     Rule Xml_S () {
         return OneOrMore(AnyOf(new char[] {0x20, 0x9, 0xD, 0xA}));
     }
+
+    /**
+     * Same as [https://www.w3.org/TR/xml/#NT-Char]Char
+     *
+     * [2] Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
+     */
+    Rule Xml_Char() {
+        return FirstOf(
+            (char)0x9,
+            (char)0xA,
+            (char)0xD,
+            CharRange('\u0020', '\uD7FF'),
+            CharRange('\uE000', '\uFFFD')/*,
+            CharRange('\u10000', '\u10FFFF')*/
+        );
+    }
+
+    /**
+     * Wraps any other rule to consume all input
+     * End of input is signalled by a {@link org.parboiled.support.Chars#EOI}
+     *
+     * @param rule Any XPathParser rule
+     *
+     * @return The rule followed by EOI
+     */
+    Rule withEOI(final Rule rule) {
+        return Sequence(rule, EOI);
+    }
 }
