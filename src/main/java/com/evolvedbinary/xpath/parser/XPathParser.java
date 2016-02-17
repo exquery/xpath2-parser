@@ -184,16 +184,18 @@ public class XPathParser extends BaseParser<ASTNode> {
      * [4] ForExpr ::= SimpleForClause "return" ExprSingle
      */
     Rule ForExpr() {
-        return Sequence(SimpleForClause(), "return", WS(), ExprSingle());
+        return Sequence(SimpleForClause(), push(new PartialForExpr((SimpleForClause)pop())), "return", WS(), ExprSingle(), push(complete(pop(), pop())));
     }
 
     /**
      * [5] SimpleForClause ::= "for" "$" VarName "in" ExprSingle ("," "$" VarName "in" ExprSingle)*
      */
     Rule SimpleForClause() {
+        final Var<List<SimpleForClause.RangeVariable>> rangeVariables = new Var<List<SimpleForClause.RangeVariable>>(new ArrayList<SimpleForClause.RangeVariable>());
         return Sequence(
-                "for", WS(), '$', WS(), VarName(), "in", WS(), ExprSingle(),
-                    ZeroOrMore(',', WS(), '$', WS(), VarName(), "in", WS(), ExprSingle())
+                "for", WS(), '$', WS(), VarName(), "in", WS(), ExprSingle(), ACTION(rangeVariables.get().add(new SimpleForClause.RangeVariable((QNameW)pop(1), pop(0)))),
+                ZeroOrMore(Sequence(',', WS(), '$', WS(), VarName(), "in", WS(), ExprSingle(), ACTION(rangeVariables.get().add(new SimpleForClause.RangeVariable((QNameW)pop(1), pop(0)))))),
+                push(new SimpleForClause(rangeVariables.getAndClear()))
         );
     }
 

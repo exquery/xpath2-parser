@@ -790,6 +790,72 @@ public class XPathParserTest {
     }
 
     @Test
+    public void parseSimpleForClause() {
+        assertEquals(
+                new SimpleForClause(
+                        new SimpleForClause.RangeVariable(new QNameW("a"), new ValueExpr(new PathExpr(false,
+                                PathExpr.SLASH_ABBREV,
+                                new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("x"))), PredicateList.EMPTY)
+                        )))
+                ),
+                parse("for $a in /x", parser.SimpleForClause())
+        );
+
+        assertEquals(
+                new SimpleForClause(
+                        new SimpleForClause.RangeVariable(new QNameW("a"), new ValueExpr(new PathExpr(false,
+                                PathExpr.SLASH_ABBREV,
+                                new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("x"))), PredicateList.EMPTY)
+                        ))),
+                        new SimpleForClause.RangeVariable(new QNameW("b"), new ValueExpr(new PathExpr(false,
+                                PathExpr.SLASH_ABBREV,
+                                new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("y"))), PredicateList.EMPTY)
+                        )))
+                ),
+                parse("for $a in /x, $b in /y", parser.SimpleForClause())
+        );
+    }
+
+    @Test
+    public void parseForExpr() {
+        assertEquals(
+                new ForExpr(
+                    new SimpleForClause(
+                            new SimpleForClause.RangeVariable(new QNameW("a"), new ValueExpr(new PathExpr(false,
+                                    PathExpr.SLASH_ABBREV,
+                                    new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("x"))), PredicateList.EMPTY)
+                            )))
+                    ),
+                    new ValueExpr(new PathExpr(true, new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY), new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("b"))), PredicateList.EMPTY)))
+                ),
+                parse("for $a in /x return $a/b", parser.ForExpr())
+        );
+
+        assertEquals(
+                new ForExpr(
+                        new SimpleForClause(
+                                new SimpleForClause.RangeVariable(new QNameW("a"), new ValueExpr(new PathExpr(false,
+                                        PathExpr.SLASH_ABBREV,
+                                        new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("x"))), PredicateList.EMPTY)
+                                ))),
+                                new SimpleForClause.RangeVariable(new QNameW("b"), new ValueExpr(new PathExpr(false,
+                                        PathExpr.SLASH_ABBREV,
+                                        new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("y"))), PredicateList.EMPTY)
+                                )))
+                        ),
+                        new AdditiveExpr(
+                            new ValueExpr(new PathExpr(true, new FilterExpr(new VarRef(new QNameW("a")), PredicateList.EMPTY))),
+                            new AdditiveExpr.AdditiveOp(
+                                AdditiveExpr.Additive.ADD,
+                                new ValueExpr(new PathExpr(true, new FilterExpr(new VarRef(new QNameW("b")), PredicateList.EMPTY)))
+                            )
+                        )
+                ),
+                parse("for $a in /x, $b in /y return $a + $b", parser.ForExpr())
+        );
+    }
+
+    @Test
     public void parseRelativePathExpr() {
         assertEquals(
                 new RelativePathExpr(new AxisStep(new Step(Axis.CHILD, new NameTest(new QNameW("a"))), PredicateList.EMPTY)),
