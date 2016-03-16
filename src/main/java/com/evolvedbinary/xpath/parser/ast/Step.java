@@ -46,4 +46,12 @@ public class Step extends AbstractASTNode {
 
         return false;
     }
+
+    public Axis getAxis() {
+        return axis;
+    }
+
+    public NodeTest getNodeTest() {
+        return nodeTest;
+    }
 }

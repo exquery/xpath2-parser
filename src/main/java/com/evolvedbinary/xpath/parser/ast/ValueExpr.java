@@ -42,4 +42,8 @@ public class ValueExpr extends AbstractOperand {
 
         return false;
     }
+
+    public ASTNode getPathExpr() {
+        return pathExpr;
+    }
 }

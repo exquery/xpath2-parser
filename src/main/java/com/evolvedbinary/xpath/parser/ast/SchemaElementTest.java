@@ -43,4 +43,8 @@ public class SchemaElementTest extends KindTest {
 
         return false;
     }
+
+    public QNameW getName() {
+        return name;
+    }
 }

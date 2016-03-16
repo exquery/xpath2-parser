@@ -23,7 +23,7 @@ package com.evolvedbinary.xpath.parser.ast;
  * Created by aretter on 28/01/2016.
  */
 public class Axis extends AbstractASTNode {
-    private enum Direction {
+    public enum Direction {
         CHILD("child"),
         PARENT("parent"),
         PRECEDING_SIBLING("preceding-sibling"),
@@ -92,5 +92,9 @@ public class Axis extends AbstractASTNode {
         }
 
         return false;
+    }
+
+    public Direction getDirection() {
+        return direction;
     }
 }

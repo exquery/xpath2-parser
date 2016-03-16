@@ -60,4 +60,13 @@ public class QNameW extends AbstractASTNode {
 
         return false;
     }
+
+    @Nullable
+    public String getPrefix() {
+        return prefix;
+    }
+
+    public String getLocalPart() {
+        return localPart;
+    }
 }

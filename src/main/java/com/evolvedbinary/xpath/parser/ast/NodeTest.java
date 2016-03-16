@@ -22,5 +22,5 @@ package com.evolvedbinary.xpath.parser.ast;
 /**
  * Created by aretter on 28/01/2016.
  */
-public interface NodeTest {
+public interface NodeTest extends ASTNode {
 }

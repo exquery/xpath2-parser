@@ -82,4 +82,8 @@ public class PathExpr extends AbstractASTNode  {
 
         return false;
     }
+
+    public List<? extends StepExpr> getSteps() {
+        return steps;
+    }
 }

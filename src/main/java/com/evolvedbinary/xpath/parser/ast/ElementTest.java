@@ -67,4 +67,9 @@ public class ElementTest extends KindTest {
         }
         return false;
     }
+
+    @Nullable
+    public QNameW getName() {
+        return name;
+    }
 }

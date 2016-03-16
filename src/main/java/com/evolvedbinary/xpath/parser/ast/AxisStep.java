@@ -48,4 +48,12 @@ public class AxisStep extends AbstractASTNode implements StepExpr {
 
         return false;
     }
+
+    public Step getStep() {
+        return step;
+    }
+
+    public PredicateList getPredicateList() {
+        return predicateList;
+    }
 }

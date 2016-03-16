@@ -57,4 +57,8 @@ public class Expr extends AbstractASTNode {
 
         return false;
     }
+
+    public List<? extends ASTNode> getExprSingles() {
+        return exprSingles;
+    }
 }
