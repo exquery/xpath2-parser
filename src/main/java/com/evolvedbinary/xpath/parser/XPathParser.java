@@ -147,14 +147,14 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [1] XPath ::= Expr
      */
-    Rule XPath() {
+    public Rule XPath() {
         return Expr();
     }
 
     /**
      * [2] Expr ::= ExprSingle ("," ExprSingle)*
      */
-    Rule Expr() {
+    public Rule Expr() {
         final Var<List<ASTNode>> exprSingles = new Var<List<ASTNode>>(new ArrayList<ASTNode>());
         return Sequence(
                 ExprSingle(), ACTION(exprSingles.get().add(pop())),
@@ -171,7 +171,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *                      | IfExpr
      *                      | OrExpr
      */
-    Rule ExprSingle() {
+    public Rule ExprSingle() {
         return FirstOf(
                 ForExpr(),
                 QuantifiedExpr(),
@@ -183,14 +183,14 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [4] ForExpr ::= SimpleForClause "return" ExprSingle
      */
-    Rule ForExpr() {
+    public Rule ForExpr() {
         return Sequence(SimpleForClause(), push(new PartialForExpr((SimpleForClause)pop())), "return", WS(), ExprSingle(), push(complete(pop(), pop())));
     }
 
     /**
      * [5] SimpleForClause ::= "for" "$" VarName "in" ExprSingle ("," "$" VarName "in" ExprSingle)*
      */
-    Rule SimpleForClause() {
+    public Rule SimpleForClause() {
         final Var<List<SimpleForClause.RangeVariable>> rangeVariables = new Var<List<SimpleForClause.RangeVariable>>(new ArrayList<SimpleForClause.RangeVariable>());
         return Sequence(
                 "for", WS(), '$', WS(), VarName(), "in", WS(), ExprSingle(), ACTION(rangeVariables.get().add(new SimpleForClause.RangeVariable((QNameW)pop(1), pop(0)))),
@@ -202,7 +202,7 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [6] QuantifiedExpr ::= ("some" | "every") "$" VarName "in" ExprSingle ("," "$" VarName "in" ExprSingle)* "satisfies" ExprSingle
      */
-    Rule QuantifiedExpr() {
+    public Rule QuantifiedExpr() {
         final Var<List<QuantifiedExpr.InClause>> inClauses = new Var<List<QuantifiedExpr.InClause>>(new ArrayList<QuantifiedExpr.InClause>());
         final Var<QNameW> varName = new Var<QNameW>();
         return Sequence(
@@ -217,7 +217,7 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [7] IfExpr ::= "if" "(" Expr ")" "then" ExprSingle "else" ExprSingle
      */
-    Rule IfExpr() {
+    public Rule IfExpr() {
         return Sequence(
                 "if", WS(), '(', WS(), Expr(), push(new PartialIfExpr((Expr)pop())), ')', WS(),
                 "then", WS(), ExprSingle(), push(complete(pop(), pop())),
@@ -228,7 +228,7 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [8] OrExpr ::= AndExpr ( "or" AndExpr )*
      */
-    Rule OrExpr() {
+    public Rule OrExpr() {
         final Var<List<AbstractOperand>> orOps = new Var<List<AbstractOperand>>(new ArrayList<AbstractOperand>());
         return FirstOf(
                 Sequence(
@@ -246,7 +246,7 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [9] AndExpr ::= ComparisonExpr ( "and" ComparisonExpr )*
      */
-    Rule AndExpr() {
+    public Rule AndExpr() {
         final Var<List<AbstractOperand>> andOps = new Var<List<AbstractOperand>>(new ArrayList<AbstractOperand>());
         return FirstOf(
                 Sequence(
@@ -268,7 +268,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *
      * Value stack head either: ComparisonExpr / RangeExpr / AdditiveExpr / MultiplicativeExpr / UnionExpr / IntersectExceptExpr / InstanceOfExpr / TreatExpr / CastableExpr / CastExpr / UnaryExpr / ValueExpr
      */
-    Rule ComparisonExpr() {
+    public Rule ComparisonExpr() {
         return FirstOf(
                 Sequence(
                         RangeExpr(), push(new PartialComparisonExpr((AbstractOperand)pop())),
@@ -284,7 +284,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *
      * Value stack head either: RangeExpr / AdditiveExpr / MultiplicativeExpr / UnionExpr / IntersectExceptExpr / InstanceOfExpr / TreatExpr / CastableExpr / CastExpr / UnaryExpr / ValueExpr
      */
-    Rule RangeExpr() {
+    public Rule RangeExpr() {
         return FirstOf(
                 Sequence(
                         AdditiveExpr(), push(new PartialRangeExpr((AbstractOperand)pop())),
@@ -302,7 +302,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *
      * Value stack head either: AdditiveExpr / MultiplicativeExpr / UnionExpr / IntersectExceptExpr / InstanceOfExpr / TreatExpr / CastableExpr / CastExpr / UnaryExpr / ValueExpr
      */
-    Rule AdditiveExpr() {
+    public Rule AdditiveExpr() {
         final Var<List<AdditiveExpr.AdditiveOp>> additiveOps = new Var<List<AdditiveExpr.AdditiveOp>>(new ArrayList<AdditiveExpr.AdditiveOp>());
         final Var<AdditiveExpr.Additive> additive = new Var<AdditiveExpr.Additive>();
         return FirstOf(
@@ -324,7 +324,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *
      * Value stack head either: MultiplicativeExpr / UnionExpr / IntersectExceptExpr / InstanceOfExpr / TreatExpr / CastableExpr / CastExpr / UnaryExpr / ValueExpr
      */
-    Rule MultiplicativeExpr() {
+    public Rule MultiplicativeExpr() {
         final Var<List<MultiplicativeExpr.MultiplicativeOp>> multiplicativeOps = new Var<List<MultiplicativeExpr.MultiplicativeOp>>(new ArrayList<MultiplicativeExpr.MultiplicativeOp>());
         final Var<MultiplicativeExpr.Multiplicative> multiplicative = new Var<MultiplicativeExpr.Multiplicative>();
         return FirstOf(
@@ -346,7 +346,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *
      * Value stack head either: UnionExpr / IntersectExceptExpr / InstanceOfExpr / TreatExpr / CastableExpr / CastExpr / UnaryExpr / ValueExpr
      */
-    Rule UnionExpr() {
+    public Rule UnionExpr() {
         final Var<List<AbstractOperand>> unionOps = new Var<List<AbstractOperand>>(new ArrayList<AbstractOperand>());
         return FirstOf(
                 Sequence(
@@ -367,7 +367,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *
      * Value stack head either: IntersectExceptExpr / InstanceOfExpr / TreatExpr / CastableExpr / CastExpr / UnaryExpr / ValueExpr
      */
-    Rule IntersectExceptExpr() {
+    public Rule IntersectExceptExpr() {
         final Var<List<IntersectExceptExpr.IntersectExceptOp>> intersectExceptOps = new Var<List<IntersectExceptExpr.IntersectExceptOp>>(new ArrayList<IntersectExceptExpr.IntersectExceptOp>());
         final Var<IntersectExceptExpr.IntersectExcept> intersectExcept = new Var<IntersectExceptExpr.IntersectExcept>();
         return FirstOf(
@@ -388,7 +388,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *
      * Value stack head either: InstanceOfExpr / TreatExpr / CastableExpr / CastExpr / UnaryExpr / ValueExpr
      */
-    Rule InstanceofExpr() {
+    public Rule InstanceofExpr() {
         return Sequence(TreatExpr(), Optional(Sequence("instance", WS(), "of", WS(), SequenceType(), push(new InstanceOfExpr((AbstractOperand)pop(1), (SequenceType)pop(0))))));
     }
 
@@ -397,7 +397,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *
      * Value stack head either: TreatExpr / CastableExpr / CastExpr / UnaryExpr / ValueExpr
      */
-    Rule TreatExpr() {
+    public Rule TreatExpr() {
         return Sequence(CastableExpr(), Optional(Sequence("treat", WS(), "as", WS(), SequenceType(), push(new TreatExpr((AbstractOperand)pop(1), (SequenceType)pop(0))))));
     }
 
@@ -406,7 +406,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *
      * Value stack head either: CastableExpr / CastExpr / UnaryExpr / ValueExpr
      */
-    Rule CastableExpr() {
+    public Rule CastableExpr() {
         return Sequence(CastExpr(), Optional(Sequence("castable", WS(), "as", WS(), SingleType(), push(new CastableExpr((AbstractOperand)pop(1), (SingleType)pop())))));
     }
 
@@ -415,7 +415,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *
      * Value stack head either: CastExpr / UnaryExpr / ValueExpr
      */
-    Rule CastExpr() {
+    public Rule CastExpr() {
         return Sequence(UnaryExpr(), Optional(Sequence("cast", WS(), "as", WS(), SingleType(), push(new CastExpr((AbstractOperand)pop(1), (SingleType)pop())))));
     }
 
@@ -424,7 +424,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *
      * Value stack head either: UnaryExpr / ValueExpr
      */
-    Rule UnaryExpr() {
+    public Rule UnaryExpr() {
         return FirstOf(
                 Sequence(OneOrMore(FirstOf('-', '+')), push(new PartialUnaryExpr(match())), ValueExpr(), push(complete(pop(), pop()))),
                 ValueExpr()
@@ -434,14 +434,14 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [21] ValueExpr ::= PathExpr
      */
-    Rule ValueExpr() {
+    public Rule ValueExpr() {
         return Sequence(PathExpr(), push(new ValueExpr(pop())));
     }
 
     /**
      * [22] GeneralComp ::= "=" | "!=" | "<" | "<=" | ">" | ">="
      */
-    Rule GeneralComp() {
+    public Rule GeneralComp() {
         return Sequence(
                 FirstOf("<=", "!=", ">=", '<', '=', '>'), push(GeneralComp.fromSyntax(match())),
                 WS()
@@ -451,7 +451,7 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [23] ValueComp ::= "eq" | "ne" | "lt" | "le" | "gt" | "ge"
      */
-    Rule ValueComp() {
+    public Rule ValueComp() {
         return Sequence(
                 FirstOf("eq", "ne", "lt", "le", "gt", "ge"), push(ValueComp.fromSyntax(match())),
                 WS()
@@ -461,7 +461,7 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [24] NodeComp ::= "is" | "<<" | ">>"
      */
-    Rule NodeComp() {
+    public Rule NodeComp() {
         return Sequence(
                 FirstOf("is", "<<", ">>"), push(NodeComp.fromSyntax(match())),
                 WS()
@@ -473,7 +473,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *                      | ("//" RelativePathExpr)
      *                      | RelativePathExpr
      */
-    Rule PathExpr() {
+    public Rule PathExpr() {
         //Converts RelativePathExpr to PathExpr
         return FirstOf(
                 Sequence(
@@ -499,7 +499,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      * @return The Path Expression
      * @throws IllegalArgumentException if both initialStep and relativePathExpr are null
      */
-    PathExpr relativePathToPath(@Nullable final StepExpr initialStep, @Nullable final RelativePathExpr relativePathExpr) {
+    public PathExpr relativePathToPath(@Nullable final StepExpr initialStep, @Nullable final RelativePathExpr relativePathExpr) {
         if(initialStep == null && relativePathExpr == null) {
             throw new IllegalArgumentException("Must provide initial step or relative path expression");
         }
@@ -517,7 +517,7 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [26] RelativePathExpr ::=    StepExpr (("/" | "//") StepExpr)*
      */
-    Rule RelativePathExpr() {
+    public Rule RelativePathExpr() {
         return Sequence(
                 StepExpr(),
                 ZeroOrMore(
@@ -537,21 +537,21 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [27] StepExpr ::= FilterExpr | AxisStep
      */
-    Rule StepExpr() {
+    public Rule StepExpr() {
         return FirstOf(FilterExpr(), AxisStep());
     }
 
     /**
      * [28] AxisStep ::= (ReverseStep | ForwardStep) PredicateList
      */
-    Rule AxisStep() {
+    public Rule AxisStep() {
         return Sequence(FirstOf(ReverseStep(), ForwardStep()), push(new PartialAxisStep((Step)pop())), PredicateList(), push(complete(pop(), pop())));
     }
 
     /**
      * [29] ForwardStep ::= (ForwardAxis NodeTest) | AbbrevForwardStep
      */
-    Rule ForwardStep() {
+    public Rule ForwardStep() {
         return FirstOf(
                 Sequence(
                         ForwardAxis(), push(new PartialStep((Axis)pop())),
@@ -571,7 +571,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *                      | ("following" "::")
      *                      | ("namespace" "::")
      */
-    Rule ForwardAxis() {
+    public Rule ForwardAxis() {
         return Sequence(FirstOf(
                 "child",
                 "attribute",
@@ -587,7 +587,7 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [31] AbbrevForwardStep ::= "@"? NodeTest
      */
-    Rule AbbrevForwardStep() {
+    public Rule AbbrevForwardStep() {
         return FirstOf(
                 Sequence('@', WS(), NodeTest(), push(new Step(Axis.ATTRIBUTE, (NodeTest)pop()))),
                 Sequence(NodeTest(), push(new Step(Axis.CHILD, (NodeTest)pop())))
@@ -597,7 +597,7 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [32] ReverseStep ::= (ReverseAxis NodeTest) | AbbrevReverseStep
      */
-    Rule ReverseStep() {
+    public Rule ReverseStep() {
         return FirstOf(
                 Sequence(
                         ReverseAxis(), push(new PartialStep((Axis)pop())),
@@ -614,7 +614,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *                      | ("preceding" "::")
      *                      | ("ancestor-or-self" "::")
      */
-    Rule ReverseAxis() {
+    public Rule ReverseAxis() {
         return Sequence(FirstOf(
                 "parent",
                 "ancestor-or-self",
@@ -627,21 +627,21 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [34] AbbrevReverseStep ::= ".."
      */
-    Rule AbbrevReverseStep() {
+    public Rule AbbrevReverseStep() {
         return Sequence("..", push(new Step(Axis.PARENT, AnyKindTest.instance())), WS());
     }
 
     /**
      * [35] NodeTest ::= KindTest | NameTest
      */
-    Rule NodeTest() {
+    public Rule NodeTest() {
         return FirstOf(KindTest(), NameTest());
     }
 
     /**
      * [36] NameTest ::= QName | Wildcard
      */
-    Rule NameTest() {
+    public Rule NameTest() {
         return Sequence(FirstOf(Wildcard(), QName()), push(new NameTest((QNameW)pop())));
     }
 
@@ -650,7 +650,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *                      | (NCName ":" "*")
      *                      | ("*" ":" NCName)      //ws: explicit
      */
-    Rule Wildcard() {
+    public Rule Wildcard() {
         return FirstOf(
                 Sequence(NCName(), push(new QNameW(match(), QNameW.WILDCARD)), ':', '*'),
                 Sequence('*', ':', NCName(), push(new QNameW(QNameW.WILDCARD, match()))),
@@ -661,21 +661,21 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [38] FilterExpr ::= PrimaryExpr PredicateList
      */
-    Rule FilterExpr() {
+    public Rule FilterExpr() {
         return Sequence(PrimaryExpr(), push(new PartialFilterExpr((PrimaryExpr)pop())), PredicateList(), push(complete(pop(), pop())));
     }
 
     /**
      * [39] PredicateList ::= Predicate*
      */
-    Rule PredicateList() {
+    public Rule PredicateList() {
         return Sequence(ZeroOrMore(Predicate()), push(new PredicateList(popAllR(Predicate.class))));
     }
 
     /**
      * [40] Predicate ::= "[" Expr "]"
      */
-    Rule Predicate() {
+    public Rule Predicate() {
         return Sequence(
                 '[', WS(),
                 Expr(), push(new Predicate(pop())),
@@ -686,7 +686,7 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [41] PrimaryExpr ::= Literal | VarRef | ParenthesizedExpr | ContextItemExpr | FunctionCall
      */
-    Rule PrimaryExpr() {
+    public Rule PrimaryExpr() {
         return FirstOf(
                 Literal(),
                 VarRef(),
@@ -699,35 +699,35 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [42] Literal ::= NumericLiteral | StringLiteral
      */
-    Rule Literal() {
+    public Rule Literal() {
         return FirstOf(NumericLiteral(), StringLiteral());
     }
 
     /**
      * [43] NumericLiteral ::= IntegerLiteral | DecimalLiteral | DoubleLiteral
      */
-    Rule NumericLiteral() {
+    public Rule NumericLiteral() {
         return FirstOf(DoubleLiteral(), DecimalLiteral(), IntegerLiteral());
     }
 
     /**
      * [44] VarRef ::= "$" VarName
      */
-    Rule VarRef() {
+    public Rule VarRef() {
         return Sequence('$', WS(), VarName(), push(new VarRef((QNameW)pop())));
     }
 
     /**
      * [45] VarName ::= QName
      */
-    Rule VarName() {
+    public Rule VarName() {
         return QName();
     }
 
     /**
      * [46] ParenthesizedExpr ::= "(" Expr? ")"
      */
-    Rule ParenthesizedExpr() {
+    public Rule ParenthesizedExpr() {
         return Sequence(
                 '(', WS(),
                 Optional(Sequence(Expr(), push(new ParenthesizedExpr(pop())))),
@@ -738,14 +738,14 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [47] ContextItemExpr ::= "."
      */
-    Rule ContextItemExpr() {
+    public Rule ContextItemExpr() {
         return Sequence('.', push(ContextItemExpr.instance()), WS());
     }
 
     /**
      * [48] FunctionCall ::= QName "(" (ExprSingle ("," ExprSingle)*)? ")"      //xgs:reserved-function-names
      */
-    Rule FunctionCall() {
+    public Rule FunctionCall() {
         //TODO(AR) should be ExprSingle?
         final Var<List<ASTNode>> arguments = new Var<List<ASTNode>>(new ArrayList<ASTNode>());
         return Sequence(
@@ -758,7 +758,7 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [49] SingleType ::= AtomicType "?"?      //gn: parens
      */
-    Rule SingleType() {
+    public Rule SingleType() {
         return FirstOf(
                 Sequence(AtomicType(), WS(), '?', push(new SingleType((AtomicType)pop(), true)), WS()),
                 Sequence(AtomicType(), push(new SingleType((AtomicType)pop(), false)))
@@ -769,7 +769,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      * [50] SequenceType ::=    ("empty-sequence" "(" ")")
      *                          | (ItemType OccurrenceIndicator?)
      */
-    Rule SequenceType() {
+    public Rule SequenceType() {
         return FirstOf(
                 Sequence("empty-sequence", push(SequenceType.EMPTY_SEQUENCE), WS(), '(', WS(), ')', WS()),
                 Sequence(ItemType(), push(new PartialSequenceType((ItemType)pop())), Optional(Sequence(OccurrenceIndicator(), push(complete(pop(), pop())))), push(completeOptional(pop())))
@@ -779,14 +779,14 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [51] OccurrenceIndicator ::= "?" | "*" | "+"
      */
-    Rule OccurrenceIndicator() {
+    public Rule OccurrenceIndicator() {
         return Sequence(FirstOf('?', '*', '+'), push(OccurrenceIndicator.fromSyntax(match().charAt(0))), WS());
     }
 
     /**
      * [52] ItemType ::= KindTest | ("item" "(" ")") | AtomicType
      */
-    Rule ItemType() {
+    public Rule ItemType() {
         return FirstOf(
                 KindTest(),
                 Sequence("item", push(ItemTypeItem.instance()), WS(), '(', WS(), ')', WS()),
@@ -797,7 +797,7 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [53] AtomicType ::= QName
      */
-    Rule AtomicType() {
+    public Rule AtomicType() {
         return Sequence(QName(), push(new AtomicType((QNameW)pop())));
     }
 
@@ -812,7 +812,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *                      | TextTest
      *                      | AnyKindTest
      */
-    Rule KindTest() {
+    public Rule KindTest() {
         return FirstOf(
                 DocumentTest(),
                 ElementTest(),
@@ -829,14 +829,14 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [55] AnyKindTest ::= "node" "(" ")"
      */
-    Rule AnyKindTest() {
+    public Rule AnyKindTest() {
         return Sequence("node", push(AnyKindTest.instance()), WS(), '(', WS(), ')', WS());
     }
 
     /**
      * [56] DocumentTest ::= "document-node" "(" (ElementTest | SchemaElementTest)? ")"
      */
-    Rule DocumentTest() {
+    public Rule DocumentTest() {
         return Sequence(
                 "document-node", push(new PartialDocumentTest()),
                 WS(), '(', WS(),
@@ -850,21 +850,21 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [57] TextTest ::= "text" "(" ")"
      */
-    Rule TextTest() {
+    public Rule TextTest() {
         return Sequence("text", push(TextTest.instance()), WS(), '(', WS(), ')', WS());
     }
 
     /**
      * [58] CommentTest ::= "comment" "(" ")"
      */
-    Rule CommentTest() {
+    public Rule CommentTest() {
         return Sequence("comment", push(CommentTest.instance()), WS(), '(', WS(), ')', WS());
     }
 
     /**
      * [59] PITest ::= "processing-instruction" "(" (NCName | StringLiteral)? ")"
      */
-    Rule PITest() {
+    public Rule PITest() {
         //TODO(AR) do we need to differentiate between the NCName and the StringLiteral, instead of treading both as java.lang.String?
 
         return Sequence("processing-instruction", push(new PartialPITest()), WS(), '(', WS(), Optional(FirstOf(Sequence(NCName(), push(complete(match(), pop()))), Sequence(StringLiteral(), push(complete(((StringLiteral)pop()).getValue(), pop()))))), ')', WS(), push(completeOptional(pop())));
@@ -873,56 +873,56 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [60] AttributeTest ::= "attribute" "(" (AttribNameOrWildcard ("," TypeName)?)? ")"
      */
-    Rule AttributeTest() {
+    public Rule AttributeTest() {
         return Sequence("attribute", push(new PartialAttributeTest()), WS(), '(', WS(), Optional(Sequence(AttribNameOrWildcard(), push(complete(pop(), pop())), Optional(Sequence(',', WS(), TypeName(), push(complete(pop(), pop())))))), ')', WS(), push(completeOptional(pop())));
     }
 
     /**
      * [61] AttribNameOrWildcard ::= AttributeName | "*"
      */
-    Rule AttribNameOrWildcard() {
+    public Rule AttribNameOrWildcard() {
         return FirstOf(AttributeName(), Sequence('*', push(new QNameW(QNameW.WILDCARD)), WS()));
     }
 
     /**
      * [62] SchemaAttributeTest ::= "schema-attribute" "(" AttributeDeclaration ")"
      */
-    Rule SchemaAttributeTest() {
+    public Rule SchemaAttributeTest() {
         return Sequence("schema-attribute", WS(), '(', WS(), AttributeDeclaration(), push(new SchemaAttributeTest((QNameW)pop())), ')', WS());
     }
 
     /**
      * [63] AttributeDeclaration ::= AttributeName
      */
-    Rule AttributeDeclaration() {
+    public Rule AttributeDeclaration() {
         return AttributeName();
     }
 
     /**
      * [64] ElementTest ::= "element" "(" (ElementNameOrWildcard ("," TypeName "?"?)?)? ")"
      */
-    Rule ElementTest() {
+    public Rule ElementTest() {
         return Sequence("element", push(new PartialElementTest()), WS(), '(', WS(), Optional(Sequence(ElementNameOrWildcard(), push(complete(pop(), pop())), Optional(Sequence(',', WS(), TypeName(), push(complete(pop(), pop())), Optional(Sequence('?', push(complete(Boolean.TRUE, pop())), WS())))))), ')', WS(), push(completeOptional(pop())));
     }
 
     /**
      * [65] ElementNameOrWildcard ::= ElementName | "*"
      */
-    Rule ElementNameOrWildcard() {
+    public Rule ElementNameOrWildcard() {
         return FirstOf(ElementName(), Sequence('*', push(new QNameW(QNameW.WILDCARD)), WS()));
     }
 
     /**
      * [66] SchemaElementTest ::= "schema-element" "(" ElementDeclaration ")"
      */
-    Rule SchemaElementTest() {
+    public Rule SchemaElementTest() {
         return Sequence("schema-element", WS(), '(', WS(), ElementDeclaration(), push(new SchemaElementTest((QNameW)pop())), ')', WS());
     }
 
     /**
      * [67] ElementDeclaration ::= ElementName
      */
-    Rule ElementDeclaration() {
+    public Rule ElementDeclaration() {
         return ElementName();
         //return ElementName().label("ElementDeclaration"); //TODO(AR) can we introduce rule wrappers with labels?
     }
@@ -930,35 +930,35 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [68] AttributeName ::= QName
      */
-    Rule AttributeName() {
+    public Rule AttributeName() {
         return QName();
     }
 
     /**
      * [69] ElementName ::= QName
      */
-    Rule ElementName() {
+    public Rule ElementName() {
         return QName();
     }
 
     /**
      * [70] TypeName ::= QName
      */
-    Rule TypeName() {
+    public Rule TypeName() {
         return QName();
     }
 
     /**
      * [71] IntegerLiteral ::= Digits
      */
-    Rule IntegerLiteral() {
+    public Rule IntegerLiteral() {
         return Sequence(Digits(), push(new IntegerLiteral(match())), WS());
     }
 
     /**
      * [72] DecimalLiteral ::= ("." Digits) | (Digits "." [0-9]*)   //ws: explicit
      */
-    Rule DecimalLiteral() {
+    public Rule DecimalLiteral() {
         return Sequence(
                 FirstOf(
                         Sequence('.', Digits(), push(new DecimalLiteral("0." + match()))),
@@ -970,7 +970,7 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [73] DoubleLiteral ::= (("." Digits) | (Digits ("." [0-9]*)?)) [eE] [+-]? Digits     //ws: explicit
      */
-    Rule DoubleLiteral() {
+    public Rule DoubleLiteral() {
         return Sequence(
                 FirstOf(
                         Sequence('.', push(new PartialDoubleLiteral("0")), Digits(), push(complete(match(), pop()))),
@@ -986,7 +986,7 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [74] StringLiteral ::= ('"' (EscapeQuot | [^"])* '"') | ("'" (EscapeApos | [^'])* "'")	//ws: explicit
      */
-    Rule StringLiteral() {
+    public Rule StringLiteral() {
         return FirstOf(
                 Sequence("\"", Sequence(ZeroOrMore(FirstOf(EscapeQuot(), NoneOf("\""))), push(new StringLiteral(match().replaceAll("\"\"", "\"")))), "\"", WS()),
                 Sequence("'", Sequence(ZeroOrMore(FirstOf(EscapeApos(), NoneOf("'"))), push(new StringLiteral(match().replaceAll("''", "'")))), "'", WS())
@@ -996,49 +996,49 @@ public class XPathParser extends BaseParser<ASTNode> {
     /**
      * [75] EscapeQuot ::= '""'
      */
-    Rule EscapeQuot() {
+    public Rule EscapeQuot() {
         return Sequence("\"\"", WS());
     }
 
     /**
      * [76] EscapeApos ::= "''"
      */
-    Rule EscapeApos() {
+    public Rule EscapeApos() {
         return Sequence("''", WS());
     }
 
     /**
      * [77] Comment ::= "(:" (CommentContents | Comment)* ":)"      //ws: explicit
      */
-    Rule Comment() {
+    public Rule Comment() {
         return Sequence("(:", WS(), ZeroOrMore(FirstOf(CommentContents(), Comment())), ":)", WS()); //TODO(AR) do we have this right
     }
 
     /**
      * [78] QName ::= [http://www.w3.org/TR/REC-xml-names/#NT-QName]Names   //xgs: xml-version
      */
-    Rule QName() {
+    public Rule QName() {
         return Sequence(XmlNames_QName(), WS());
     }
 
     /**
      * [79] NCName ::= [http://www.w3.org/TR/REC-xml-names/#NT-NCName]Names     //xgs: xml-version
      */
-    Rule NCName() {
+    public Rule NCName() {
         return XmlNames_NCName();
     }
 
     /**
      * [81] Digits ::= [0-9]+
      */
-    Rule Digits() {
+    public Rule Digits() {
         return OneOrMore(CharRange('0', '9'));
     }
 
     /**
      * [82] CommentContents ::= (Char+ - (Char* ('(:' | ':)') Char*))
      */
-    Rule CommentContents() {
+    public Rule CommentContents() {
 //        return Sequence(
 //                OneOrMore(Xml_Char()),
 //                OneOrMore(TestNot(Sequence(ZeroOrMore(Xml_Char()), FirstOf("(:", ":)"), ZeroOrMore(Xml_Char()))), ANY)
@@ -1052,42 +1052,42 @@ public class XPathParser extends BaseParser<ASTNode> {
      * [7] QName ::=    PartialPrefixedName
      *                  | UnprefixedName
      */
-    Rule XmlNames_QName() {
+    public Rule XmlNames_QName() {
         return FirstOf(XmlNames_PrefixedName(), XmlNames_UnprefixedName());
     }
 
     /**
      * [8] PartialPrefixedName ::= Prefix ':' LocalPart
      */
-    Rule XmlNames_PrefixedName() {
+    public Rule XmlNames_PrefixedName() {
         return Sequence(XmlNames_Prefix(), push(new PartialPrefixedName(match())), ':', XmlNames_LocalPart(), push(complete(match(), pop())));
     }
 
     /**
      * [9] UnprefixedName ::= LocalPart
      */
-    Rule XmlNames_UnprefixedName() {
+    public Rule XmlNames_UnprefixedName() {
         return Sequence(XmlNames_LocalPart(), push(new QNameW(match())));
     }
 
     /**
      * [10] Prefix ::= NCName
      */
-    Rule XmlNames_Prefix() {
+    public Rule XmlNames_Prefix() {
         return XmlNames_NCName();
     }
 
     /**
      * [11] LocalPart ::= NCName
      */
-    Rule XmlNames_LocalPart() {
+    public Rule XmlNames_LocalPart() {
         return XmlNames_NCName();
     }
 
     /**
      * [4] NCName ::= [https://www.w3.org/TR/REC-xml/#NT-Name]Name - (Char* ':' Char*)  // An XML Name, minus the ":"
      */
-    Rule XmlNames_NCName() {
+    public Rule XmlNames_NCName() {
         return XmlNames_Name_minusColon();
     }
 
@@ -1098,7 +1098,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *
      * [_5] Name ::= NameStartChar_minusColon (NameChar)*
      */
-    Rule XmlNames_Name_minusColon() {
+    public Rule XmlNames_Name_minusColon() {
         return Sequence(XmlNames_NameStartChar_minusColon(), ZeroOrMore(XmlNames_NameChar()));
     }
 
@@ -1112,7 +1112,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *                          | [#x2C00-#x2FEF] | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD]
      *                          | [#x10000-#xEFFFF]
      */
-    Rule XmlNames_NameStartChar_minusColon() {
+    public Rule XmlNames_NameStartChar_minusColon() {
         return FirstOf(
                 CharRange('A', 'Z'),
                 '_',
@@ -1139,7 +1139,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *
      * [_4a] NameChar ::= NameStartChar_minusColon | "-" | "." | [0-9] | #xB7 | [#x0300-#x036F] | [#x203F-#x2040]
      */
-    Rule XmlNames_NameChar() {
+    public Rule XmlNames_NameChar() {
         return FirstOf(
                 XmlNames_NameStartChar_minusColon(),
                 '-',
@@ -1156,7 +1156,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *
      * [3] S ::= (#x20 | #x9 | #xD | #xA)+
      */
-    Rule Xml_S() {
+    public Rule Xml_S() {
         return OneOrMore(AnyOf(new char[] {0x20, 0x9, 0xD, 0xA}));
     }
 
@@ -1165,7 +1165,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *
      * [2] Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
      */
-    Rule Xml_Char() {
+    public Rule Xml_Char() {
         return FirstOf(
             (char)0x9,
             (char)0xA,
@@ -1184,7 +1184,7 @@ public class XPathParser extends BaseParser<ASTNode> {
      *
      * @return The rule followed by an EOI rule
      */
-    Rule withEOI(final Rule rule) {
+    public Rule withEOI(final Rule rule) {
         return Sequence(rule, EOI);
     }
 }
