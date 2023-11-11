@@ -91,6 +91,7 @@
                         <exclude>**/pom.xml</exclude>
                         <exclude>**/README.md</exclude>
                         <exclude>**/LICENSE</exclude>
+                        <exclude>.github/**</exclude>
                         <exclude>src/main/resources/**</exclude>
                     </excludes>
                     <encoding>${project.build.sourceEncoding}</encoding>

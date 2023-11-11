@@ -1,6 +1,8 @@
 XPath Parser
 ============
-[![Build Status](https://travis-ci.org/exquery/xpath2-parser.png?branch=master)](https://travis-ci.org/exquery/xpath2-parser) [![Java 6+](https://img.shields.io/badge/java-6+-blue.svg)](http://java.oracle.com) [![License](https://img.shields.io/badge/license-GPL%202-blue.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
+[![Build Status](https://github.com/exquery/xpath2-parser/actions/workflows/ci.yml/badge.svg)](https://github.com/exquery/xpath2-parser/actions/workflows/ci.yml)
+[![Java 6+](https://img.shields.io/badge/java-6+-blue.svg)](http://java.oracle.com)
+[![License](https://img.shields.io/badge/license-GPL%202-blue.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
 
 This library implements a complete XPath 2 Parser in Java 1.6, using [Parboiled](https://github.com/sirthias/parboiled).
 

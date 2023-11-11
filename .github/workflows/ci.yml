@@ -1,0 +1,24 @@
+name: Build
+on: [push, pull_request]
+
+jobs:
+  assemble:
+    name: Build and Test
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        jdk: [8,11,17]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.jdk }}
+      - name: Compile
+        run: mvn clean compile
+      - name: Test
+        run: mvn verify
