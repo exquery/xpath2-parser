@@ -18,7 +18,7 @@
 
     <organization>
         <name>Evolved Binary Ltd.</name>
-        <url>http://www.evolvedbinary.com</url>
+        <url>https://www.evolvedbinary.com</url>
     </organization>
 
     <developers>
@@ -31,7 +31,7 @@
     <licenses>
         <license>
             <name>GNU General Public License, version 2</name>
-            <url>http://opensource.org/licenses/gpl-2.0</url>
+            <url>https://opensource.org/licenses/gpl-2.0</url>
             <distribution>repo</distribution>
         </license>
     </licenses>
@@ -213,7 +213,7 @@
                 <artifactId>maven-release-plugin</artifactId>
                 <version>2.5.3</version>
                 <configuration>
-                    <mavenExecutorId>forked-path</mavenExecutorId> <!-- avoid a bug with GPG plugin hanging http://jira.codehaus.org/browse/MGPG-9 -->
+                    <mavenExecutorId>forked-path</mavenExecutorId> <!-- avoid a bug with GPG plugin hanging https://jira.codehaus.org/browse/MGPG-9 -->
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                     <tagNameFormat>@{project.version}</tagNameFormat>
                 </configuration>
@@ -224,11 +224,11 @@
     <pluginRepositories>
         <pluginRepository>
             <id>sonatype-releases</id>
-            <url>http://oss.sonatype.org/content/repositories/releases</url>
+            <url>https://oss.sonatype.org/content/repositories/releases</url>
         </pluginRepository>
         <pluginRepository>
             <id>clojars.org</id>
-            <url>http://clojars.org/repo</url>
+            <url>https://clojars.org/repo</url>
         </pluginRepository>
     </pluginRepositories>
 
