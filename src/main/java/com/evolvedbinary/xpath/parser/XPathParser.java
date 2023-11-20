@@ -19,7 +19,7 @@
  */
 package com.evolvedbinary.xpath.parser;
 
-import com.evolvedbinary.functional.Either;
+import com.evolvedbinary.j8fu.Either;
 import com.evolvedbinary.xpath.parser.ast.partial.*;
 import org.parboiled.BaseParser;
 import org.parboiled.Rule;

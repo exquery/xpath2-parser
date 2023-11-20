@@ -19,7 +19,7 @@
  */
 package com.evolvedbinary.xpath.parser.ast;
 
-import com.evolvedbinary.functional.Either;
+import com.evolvedbinary.j8fu.Either;
 import javax.annotation.Nullable;
 
 /**
