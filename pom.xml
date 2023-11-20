@@ -79,23 +79,26 @@
             <plugin>
                 <groupId>com.mycila</groupId>
                 <artifactId>license-maven-plugin</artifactId>
-                <version>3.0</version>
+                <version>4.3</version>
                 <configuration>
-                    <header>GPL2-template.txt</header>
                     <failIfMissing>true</failIfMissing>
-                    <aggregate>true</aggregate>
                     <strictCheck>true</strictCheck>
-                    <properties>
-                        <organization>${project.organization.name}</organization>
-                    </properties>
-                    <excludes>
-                        <exclude>**/pom.xml</exclude>
-                        <exclude>**/README.md</exclude>
-                        <exclude>**/LICENSE</exclude>
-                        <exclude>.github/**</exclude>
-                        <exclude>src/main/resources/**</exclude>
-                    </excludes>
                     <encoding>${project.build.sourceEncoding}</encoding>
+                    <licenseSets>
+                        <licenseSet>
+                            <header>GPL2-template.txt</header>
+                            <properties>
+                                <organization>${project.organization.name}</organization>
+                            </properties>
+                            <excludes>
+                                <exclude>**/pom.xml</exclude>
+                                <exclude>**/README.md</exclude>
+                                <exclude>**/LICENSE</exclude>
+                                <exclude>.github/**</exclude>
+                                <exclude>src/main/resources/**</exclude>
+                            </excludes>
+                        </licenseSet>
+                    </licenseSets>
                 </configuration>
                 <executions>
                     <execution>
