@@ -22,7 +22,7 @@ package com.evolvedbinary.xpath.parser.ast.partial;
 import com.evolvedbinary.xpath.parser.ast.ItemType;
 import com.evolvedbinary.xpath.parser.ast.OccurrenceIndicator;
 import com.evolvedbinary.xpath.parser.ast.SequenceType;
-import org.jetbrains.annotations.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Created by aretter on 12/02/2016.

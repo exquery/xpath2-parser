@@ -19,7 +19,7 @@
  */
 package com.evolvedbinary.xpath.parser.ast;
 
-import org.jetbrains.annotations.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Created by aretter on 11/02/2016.

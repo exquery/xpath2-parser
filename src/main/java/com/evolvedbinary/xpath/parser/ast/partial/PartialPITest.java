@@ -20,7 +20,7 @@
 package com.evolvedbinary.xpath.parser.ast.partial;
 
 import com.evolvedbinary.xpath.parser.ast.PITest;
-import org.jetbrains.annotations.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Created by aretter on 30/01/2016.

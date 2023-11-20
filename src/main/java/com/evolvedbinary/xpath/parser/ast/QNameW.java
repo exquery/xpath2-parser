@@ -19,7 +19,7 @@
  */
 package com.evolvedbinary.xpath.parser.ast;
 
-import org.jetbrains.annotations.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Similar to a QName but where the prefix or localPart
