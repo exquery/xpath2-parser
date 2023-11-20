@@ -1,4 +1,4 @@
-/**
+/*
  * XPath 2 Parser
  * A Parser for XPath 2
  * Copyright (C) 2016 Evolved Binary Ltd.
@@ -21,7 +21,7 @@ package com.evolvedbinary.xpath.parser.ast.partial;
 
 import com.evolvedbinary.xpath.parser.ast.ElementTest;
 import com.evolvedbinary.xpath.parser.ast.QNameW;
-import org.jetbrains.annotations.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Created by aretter on 30/01/2016.

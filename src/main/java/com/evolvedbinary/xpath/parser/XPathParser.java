@@ -1,4 +1,4 @@
-/**
+/*
  * XPath 2 Parser
  * A Parser for XPath 2
  * Copyright (C) 2016 Evolved Binary Ltd.
@@ -19,9 +19,8 @@
  */
 package com.evolvedbinary.xpath.parser;
 
-import com.evolvedbinary.functional.Either;
+import com.evolvedbinary.j8fu.Either;
 import com.evolvedbinary.xpath.parser.ast.partial.*;
-import org.jetbrains.annotations.Nullable;
 import org.parboiled.BaseParser;
 import org.parboiled.Rule;
 import org.parboiled.annotations.BuildParseTree;
@@ -32,6 +31,7 @@ import org.parboiled.support.Var;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.annotation.Nullable;
 
 //TODO(AR) think about whether we can remove the use of org.parboiled.support.Var in favour of PartialASTNode, then we would have an immutable AST production
 //TODO(AR) may be possible to replace some uses of Var with popAllR

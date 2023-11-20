@@ -1,4 +1,4 @@
-/**
+/*
  * XPath 2 Parser
  * A Parser for XPath 2
  * Copyright (C) 2016 Evolved Binary Ltd.
@@ -19,7 +19,7 @@
  */
 package com.evolvedbinary.xpath.parser.ast;
 
-import org.jetbrains.annotations.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Similar to a QName but where the prefix or localPart

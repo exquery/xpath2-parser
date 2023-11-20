@@ -1,4 +1,4 @@
-/**
+/*
  * XPath 2 Parser
  * A Parser for XPath 2
  * Copyright (C) 2016 Evolved Binary Ltd.

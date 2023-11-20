@@ -1,4 +1,4 @@
-/**
+/*
  * XPath 2 Parser
  * A Parser for XPath 2
  * Copyright (C) 2016 Evolved Binary Ltd.
@@ -19,7 +19,7 @@
  */
 package com.evolvedbinary.xpath.parser.ast.partial;
 
-import com.evolvedbinary.functional.Either;
+import com.evolvedbinary.j8fu.Either;
 import com.evolvedbinary.xpath.parser.ast.ElementTest;
 import com.evolvedbinary.xpath.parser.ast.DocumentTest;
 import com.evolvedbinary.xpath.parser.ast.SchemaElementTest;
