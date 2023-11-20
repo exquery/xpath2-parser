@@ -1,10 +1,10 @@
 XPath Parser
 ============
 [![Build Status](https://github.com/exquery/xpath2-parser/actions/workflows/ci.yml/badge.svg)](https://github.com/exquery/xpath2-parser/actions/workflows/ci.yml)
-[![Java 6+](https://img.shields.io/badge/java-6+-blue.svg)](http://java.oracle.com)
+[![Java 11+](https://img.shields.io/badge/java-11+-blue.svg)](http://java.oracle.com)
 [![License](https://img.shields.io/badge/license-GPL%202-blue.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
 
-This library implements a complete XPath 2 Parser in Java 1.6, using [Parboiled](https://github.com/sirthias/parboiled).
+This library implements a complete XPath 2 Parser in Java 11, using [Parboiled](https://github.com/sirthias/parboiled).
 
 The parser generates an AST (Abstract Syntax Tree) which you can then use in your own application for whatever you wish. The class [XPathUtil](https://github.com/exquery/xpath2-parser/blob/master/src/main/java/com/evolvedbinary/xpath/parser/XPathUtil.java) shows how the parser can be used. You can also execute `XPathUtil` as an application if you want to understand the node-tree produced by the parser.
 

@@ -44,8 +44,8 @@
   </scm>
 
     <properties>
-        <project.build.source>1.6</project.build.source>
-        <project.build.target>1.6</project.build.target>
+        <project.build.source>11</project.build.source>
+        <project.build.target>11</project.build.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <parboiled.version>1.4.1</parboiled.version>
     </properties>
@@ -229,35 +229,6 @@
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>java17-compile-compatibility</id>
-            <!--
-                By default, this sets the `-source 1.7` and `-target 1.7`
-                flags to javac on JDK 17+, as it does not support older source
-                and target versions.
-
-                You can disable at build time, by using the mvn
-                args: `-P !java17-compile-compatibility`
-            -->
-            <activation>
-                <jdk>[17,)</jdk>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-compiler-plugin</artifactId>
-                        <configuration>
-                            <source>1.7</source>
-                            <target>1.7</target>
-                            <encoding>${project.build.sourceEncoding}</encoding>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
     <pluginRepositories>
         <pluginRepository>
